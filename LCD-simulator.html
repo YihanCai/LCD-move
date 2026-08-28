@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LCD 山峰动画模拟器 (240x240)</title>
+<style>
+  :root {
+    --bg: #1e2430; --panel: #2a3140; --panel2: #333c4f;
+    --text: #e6ebf2; --muted: #9aa7bd; --accent: #4da3ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    min-height: 100vh; display: flex; align-items: center;
+    justify-content: center; padding: 24px;
+  }
+  .wrap { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .screen { background: #111; border-radius: 18px; padding: 22px; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  canvas {
+    width: 360px; height: 360px; image-rendering: pixelated;
+    display: block; background: #000; border-radius: 10px;
+  }
+  .badge { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  .panel {
+    background: var(--panel); border-radius: 18px; padding: 20px 22px;
+    width: 300px; box-shadow: 0 12px 40px rgba(0,0,0,.4);
+  }
+  .panel h1 { font-size: 17px; margin-bottom: 4px; }
+  .panel .sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .group { margin-bottom: 16px; }
+  .group .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  button {
+    flex: 1; padding: 8px 10px; border: none; border-radius: 8px;
+    background: var(--panel2); color: var(--text); cursor: pointer; font-size: 13px; transition: background .15s;
+  }
+  button:hover { background: #3d4760; }
+  button.active { background: var(--accent); color: #0b1a2b; font-weight: 600; }
+  .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .toggles button { font-size: 12px; }
+  .readout {
+    margin-top: 8px; background: var(--panel2); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; font-family: "Consolas", monospace; color: var(--muted);
+  }
+  .readout b { color: var(--accent); }
+  .hint { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ============ 屏幕 ============ -->
+  <div class="screen">
+    <canvas id="lcd" width="240" height="240"></canvas>
+    <div class="badge"><span>ST7789 · 240×240</span><span id="frameStat">—</span></div>
+  </div>
+
+  <!-- ============ 控制面板 ============ -->
+  <div class="panel">
+    <h1>山峰动画模拟器</h1>
+    <div class="sub">只画“要爬的山” · 折线山脊 + 岩层 + 雪帽</div>
+
+    <div class="group">
+      <div class="label"><span>移动速度</span><span id="spdVal">中</span></div>
+      <input type="range" id="speed" min="1" max="100" value="30">
+    </div>
+
+    <div class="group">
+      <div class="label"><span>人物位置 x</span><span id="xVal">—</span></div>
+      <input type="range" id="personX" min="20" max="196" value="100" step="1">
+      <div class="row">
+        <button id="btnPlay" class="active">▶ 播放</button>
+        <button id="btnPause">⏸ 暂停</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="label">显示元素</div>
+      <div class="toggles">
+        <button id="tgSky" class="active">天空</button>
+        <button id="tgMountain" class="active">山体</button>
+        <button id="tgRock" class="active">岩层</button>
+        <button id="tgSnow" class="active">雪帽</button>
+        <button id="tgCrack" class="active">裂缝</button>
+        <button id="tgPerson" class="active">小人</button>
+        <button id="tgRidge" class="active">山脊线</button>
+      </div>
+    </div>
+
+    <div class="readout" id="readout">
+      person.x = <b id="roX">100</b><br>
+      左脚坡高 = <b id="roGL">—</b>　右脚坡高 = <b id="roGR">—</b>
+    </div>
+
+    <div class="hint">
+      💡 拖动“人物位置 x”可手动预览某帧；暂停后可微调，检查脚是否贴合山脊。满意后把坐标/颜色写回 src/main.cpp 烧录到 LCD。
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 山峰场景：只画主角要爬的那座山
+// ============================================================
+const W = 240, H = 240;
+const ctx = document.getElementById('lcd').getContext('2d');
+
+// ---------- 山脊折线（矮山：整座山+人物都只占屏幕下端 1/3）----------
+// 屏幕 240px，下端 1/3 = y 160~240。山顶平台 y≈198。
+// 每个点 [x, y]。前 n-1 个点是爬坡路径，最后 [240,240] 只是山体右缘
+const RIDGE = [
+  [  0, 240],   // 山脚（左下角）
+  [ 45, 233],
+  [ 90, 225],
+  [130, 218],
+  [150, 220],   // 小凹（真实山脊有起伏）
+  [175, 208],
+  [190, 200],
+  [202, 198],   // 进入山顶（左侧）
+  [215, 198],   // ← 山顶平坦段（水平台地）
+  [225, 208],   // 右侧下坡
+  [240, 240],   // 山体右缘（用于闭合，不作为爬坡路径）
+];
+
+// ---------- 颜色 ----------
+const C = {
+  skyTop:    '#5FA8FF',  // 天空 4 层渐变（与原来一致的天空）
+  sky2:      '#8FCBFF',
+  sky3:      '#B5DBFF',
+  skyBase:   '#DCEFFF',
+  mountain:  '#2B6B3C',  // 山体主色（深岩绿）
+  rock:      ['#357A46','#3D854F','#47905A','#519B65','#5CA870','#68B57C'], // 岩层（逐层变浅→受光）
+  snow:      '#F2F7F4',  // 雪帽
+  crack:     '#1E4A2E',  // 岩石裂缝
+  ridge:     '#FFFFFF',  // 山脊受光棱线
+  person:    '#E53935',  // 红色小人（登山服，任何背景都醒目）
+  guide:     '#FF00FF',  // 坡道参考线（默认关）
+};
+
+// ---------- 显示开关 ----------
+const show = {
+  sky: true, mountain: true, rock: true, snow: true,
+  crack: true, person: true, ridge: true, guide: false,
+};
+
+// ---------- 沿山脊折线插值：给定 x 求坡面高度 y ----------
+function groundAt(x) {
+  for (let i = 0; i < RIDGE.length - 2; i++) {   // 用前 11 点（不含右缘）
+    const [x1, y1] = RIDGE[i], [x2, y2] = RIDGE[i+1];
+    if (x >= x1 && x <= x2) {
+      const t = (x - x1) / (x2 - x1);
+      return y1 + (y2 - y1) * t;
+    }
+  }
+  return 240;
+}
+
+// ---------- 画背景（山）----------
+function drawMountain() {
+  // 1) 天空（4 层渐变）
+  if (show.sky) {
+    ctx.fillStyle = C.skyTop;  ctx.fillRect(0, 0, 240, 45);
+    ctx.fillStyle = C.sky2;    ctx.fillRect(0, 45, 240, 45);
+    ctx.fillStyle = C.sky3;    ctx.fillRect(0, 90, 240, 45);
+    ctx.fillStyle = C.skyBase; ctx.fillRect(0, 135, 240, 45);
+  } else {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 240, 240);
+  }
+
+  // 2) 山体主轮廓（沿折线山脊 → 右缘闭合）
+  if (show.mountain) {
+    ctx.fillStyle = C.mountain;
+    ctx.beginPath();
+    ctx.moveTo(0, 240);
+    RIDGE.forEach(([x, y]) => ctx.lineTo(x, y));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 3) 岩层：沿每段山脊往下延展的梯形岩石带（受光面逐层变浅）
+  if (show.rock) {
+    const drop = [10, 9, 9, 8, 8, 7, 6, 6, 5];
+    for (let i = 0; i < RIDGE.length - 2; i++) {
+      const [x1, y1] = RIDGE[i], [x2, y2] = RIDGE[i+1];
+      const d = drop[i];
+      ctx.fillStyle = C.rock[Math.min(i, C.rock.length - 1)];
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x2, y2 + d);
+      ctx.lineTo(x1, y1 + d);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // 4) 雪帽（贴合平坦山顶的平台，y≈166）
+  if (show.snow) {
+    ctx.fillStyle = C.snow;
+    ctx.beginPath();
+    ctx.moveTo(188, 174);
+    ctx.lineTo(196, 164);
+    ctx.lineTo(216, 164);   // 沿平坦山顶
+    ctx.lineTo(222, 174);
+    ctx.lineTo(208, 176);
+    ctx.lineTo(194, 178);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 5) 岩石裂缝：几条从山脊向下的深色短线
+  if (show.crack) {
+    ctx.strokeStyle = C.crack;
+    ctx.lineWidth = 1;
+    const cracks = [
+      [70, 220, 74, 231], [115, 208, 120, 220], [150, 210, 155, 220],
+      [178, 184, 182, 195], [196, 170, 200, 182], [95, 214, 99, 224],
+    ];
+    cracks.forEach(([x1,y1,x2,y2]) => {
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+  }
+
+  // 6) 山脊受光棱线（沿整条爬坡山脊描白）
+  if (show.ridge) {
+    ctx.strokeStyle = C.ridge;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 240);
+    for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
+    ctx.stroke();
+  }
+
+  // 7) 坡道参考线（调试用，默认关）
+  if (show.guide) {
+    ctx.strokeStyle = C.guide; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, 240);
+    for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
+    ctx.stroke();
+  }
+}
+
+// ---------- 画小人（对应 drawPerson）----------
+function drawPerson(cx, gyL, gyR, color) {
+  const gyMid = Math.floor((gyL + gyR) / 2);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, gyMid - 46, 9, 0, Math.PI*2); ctx.fill();          // 头
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-32); ctx.lineTo(cx, gyMid-14); ctx.stroke(); // 身体（缩短，适配更真实的比例）
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-30); ctx.lineTo(cx-12, gyMid-20); ctx.stroke(); // 左臂
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-30); ctx.lineTo(cx+12, gyMid-20); ctx.stroke(); // 右臂
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-14); ctx.lineTo(cx-8, gyL); ctx.stroke();      // 左腿
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-14); ctx.lineTo(cx+8, gyR); ctx.stroke();      // 右腿
+}
+
+// ---------- 渲染一帧 ----------
+function drawFrame(personX) {
+  ctx.clearRect(0, 0, W, H);
+  drawMountain();
+  if (show.person) {
+    const gyL = Math.floor(groundAt(personX - 8));
+    const gyR = Math.floor(groundAt(personX + 8));
+    drawPerson(personX, gyL, gyR, C.person);
+    document.getElementById('roX').textContent = personX;
+    document.getElementById('roGL').textContent = gyL;
+    document.getElementById('roGR').textContent = gyR;
+    document.getElementById('xVal').textContent = personX;
+  }
+}
+
+// ============================================================
+// 动画循环（基于时间，速度滑块控制移动快慢）
+// ============================================================
+let playing = true;
+let currentX = 100;
+const slider = document.getElementById('personX');
+const speedSlider = document.getElementById('speed');
+let lastT = 0;
+const msPerPx = s => 120 - (s - 1) * (114 / 99);
+
+function tick(ts) {
+  if (!lastT) lastT = ts;
+  const dt = ts - lastT;
+  lastT = ts;
+  if (playing) {
+    currentX += dt / msPerPx(parseInt(speedSlider.value, 10));
+    if (currentX > 196) currentX = 20;
+    slider.value = Math.round(currentX);
+    drawFrame(Math.round(currentX));
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+drawFrame(currentX);
+
+// ---------- 控件事件 ----------
+document.getElementById('btnPlay').addEventListener('click', e => {
+  playing = true;
+  e.target.classList.add('active');
+  document.getElementById('btnPause').classList.remove('active');
+});
+document.getElementById('btnPause').addEventListener('click', e => {
+  playing = false;
+  e.target.classList.add('active');
+  document.getElementById('btnPlay').classList.remove('active');
+});
+slider.addEventListener('input', () => {
+  currentX = parseInt(slider.value, 10);
+  drawFrame(currentX);
+});
+speedSlider.addEventListener('input', () => {
+  document.getElementById('spdVal').textContent =
+    speedSlider.value < 35 ? '慢' : speedSlider.value < 70 ? '中' : '快';
+});
+const tgMap = {
+  tgSky:'sky', tgMountain:'mountain', tgRock:'rock', tgSnow:'snow',
+  tgCrack:'crack', tgPerson:'person', tgRidge:'ridge',
+};
+for (const [id, key] of Object.entries(tgMap)) {
+  document.getElementById(id).addEventListener('click', e => {
+    show[key] = !show[key];
+    e.target.classList.toggle('active', show[key]);
+    drawFrame(currentX);
+  });
+}
+</script>
+</body>
+</html>
