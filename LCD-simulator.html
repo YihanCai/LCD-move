@@ -196,16 +196,17 @@ function drawMountain() {
     }
   }
 
-  // 4) 雪帽（贴合平坦山顶的平台，y≈166）
+  // 4) 雪帽（贴合山顶台地：底缘压在 y≈198~204 的台地/坡面上，不悬空）
   if (show.snow) {
     ctx.fillStyle = C.snow;
     ctx.beginPath();
-    ctx.moveTo(188, 174);
-    ctx.lineTo(196, 164);
-    ctx.lineTo(216, 164);   // 沿平坦山顶
-    ctx.lineTo(222, 174);
-    ctx.lineTo(208, 176);
-    ctx.lineTo(194, 178);
+    ctx.moveTo(191, 204);   // 左基底（落在左坡 y≈204）
+    ctx.lineTo(197, 193);   // 沿左肩拾级而上
+    ctx.lineTo(205, 188);   // 左侧隆起
+    ctx.lineTo(214, 188);   // 顶面（与台地同宽）
+    ctx.lineTo(221, 196);   // 右下落到台地右缘
+    ctx.lineTo(215, 202);   // 回到台地表面
+    ctx.lineTo(203, 203);   // 沿台地闭合
     ctx.closePath();
     ctx.fill();
   }
@@ -223,24 +224,24 @@ function drawMountain() {
     });
   }
 
-  // 6) 山脊受光棱线（沿整条爬坡山脊描白）
-  if (show.ridge) {
-    ctx.strokeStyle = C.ridge;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 240);
-    for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
-    ctx.stroke();
-  }
+      // 6) 山脊受光棱线（沿整条爬坡山脊描白）
+      if (show.ridge) {
+        ctx.strokeStyle = C.ridge;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 240);
+        for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
+        ctx.stroke();
+      }
 
-  // 7) 坡道参考线（调试用，默认关）
-  if (show.guide) {
-    ctx.strokeStyle = C.guide; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, 240);
-    for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
-    ctx.stroke();
-  }
-}
+      // 7) 坡道参考线（调试用，默认关）
+      if (show.guide) {
+        ctx.strokeStyle = C.guide; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, 240);
+        for (let i = 1; i < RIDGE.length - 1; i++) ctx.lineTo(RIDGE[i][0], RIDGE[i][1]);
+        ctx.stroke();
+      }
+    }
 
 // ---------- 画小人（对应 drawPerson）----------
 function drawPerson(cx, gyL, gyR, color) {
@@ -248,12 +249,12 @@ function drawPerson(cx, gyL, gyR, color) {
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(cx, gyMid - 46, 9, 0, Math.PI*2); ctx.fill();          // 头
-  ctx.beginPath(); ctx.moveTo(cx, gyMid-32); ctx.lineTo(cx, gyMid-14); ctx.stroke(); // 身体（缩短，适配更真实的比例）
-  ctx.beginPath(); ctx.moveTo(cx, gyMid-30); ctx.lineTo(cx-12, gyMid-20); ctx.stroke(); // 左臂
-  ctx.beginPath(); ctx.moveTo(cx, gyMid-30); ctx.lineTo(cx+12, gyMid-20); ctx.stroke(); // 右臂
-  ctx.beginPath(); ctx.moveTo(cx, gyMid-14); ctx.lineTo(cx-8, gyL); ctx.stroke();      // 左腿
-  ctx.beginPath(); ctx.moveTo(cx, gyMid-14); ctx.lineTo(cx+8, gyR); ctx.stroke();      // 右腿
+  ctx.beginPath(); ctx.arc(cx, gyMid - 25, 8, 0, Math.PI*2); ctx.fill();          // 头（缩小）
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-18); ctx.lineTo(cx, gyMid-10); ctx.stroke(); // 身体
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-17); ctx.lineTo(cx-9, gyMid-9); ctx.stroke(); // 左臂
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-17); ctx.lineTo(cx+9, gyMid-9); ctx.stroke(); // 右臂
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-10); ctx.lineTo(cx-6, gyL); ctx.stroke();      // 左腿
+  ctx.beginPath(); ctx.moveTo(cx, gyMid-10); ctx.lineTo(cx+6, gyR); ctx.stroke();      // 右腿
 }
 
 // ---------- 渲染一帧 ----------

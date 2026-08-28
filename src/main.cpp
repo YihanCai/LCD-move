@@ -1,8 +1,9 @@
 // ============================================================
-// 步骤 4：让小人爬坡动画（核心目标）
-// 小人沿坡道从左下角移动到右上角，用 Sprite 双缓冲防闪烁
+// 步骤 4：让小人爬坡动画（与 LCD-simulator.html 同步）
+// 小人沿折线山脊从左下角爬到右上角平台，用 Sprite 双缓冲防闪烁
 // 库：LovyanGFX（原生支持 ESP32-C6 + ST7789）
 // 引脚：SCLK=7, MOSI=6, CS=14, DC=15, RST=21, BL=22
+// 画面：只画"要爬的那座山"，山+人物整体落在屏幕下端 1/3 (y 160~240)
 // ============================================================
 #include <LovyanGFX.hpp>
 
@@ -62,83 +63,136 @@ public:
 LGFX tft;   // 全局屏幕实例
 lgfx::LGFX_Sprite canvas(&tft);   // 离屏缓冲（双缓冲，防闪烁）
 
-// ---- 绘制山景背景（画到 canvas 而非 tft）----
-void drawScene()
+// ---- 颜色（RGB565，与模拟器 hex 对应）----
+static const uint16_t C_SKY_TOP   = 0x5D5F;   // #5FA8FF
+static const uint16_t C_SKY_2     = 0x8E5F;   // #8FCBFF
+static const uint16_t C_SKY_3     = 0xB6DF;   // #B5DBFF
+static const uint16_t C_SKY_BASE  = 0xDF7F;   // #DCEFFF
+static const uint16_t C_MOUNTAIN  = 0x2B47;   // #2B6B3C
+static const uint16_t C_ROCK[6]   = { 0x33C8, 0x3C29, 0x448B, 0x54CC, 0x5D4E, 0x6DAF };
+static const uint16_t C_SNOW      = 0xF7BE;   // #F2F7F4
+static const uint16_t C_CRACK     = 0x1A45;   // #1E4A2E
+static const uint16_t C_RIDGE     = 0xFFFF;   // #FFFFFF
+static const uint16_t C_PERSON    = 0xE1C6;   // #E53935 红色小人
+
+// ---- 山脊折线（矮山：山+人物整体落在屏幕下端 1/3，y 160~240）----
+// 前 n-1 个点是爬坡路径，最后 [240,240] 只是山体右缘（用于闭合，不作为路径）
+static const int RIDGE[][2] = {
+    {  0, 240},   // 山脚（左下角）
+    { 45, 233},
+    { 90, 225},
+    {130, 218},
+    {150, 220},   // 小凹（真实山脊有起伏）
+    {175, 208},
+    {190, 200},
+    {202, 198},   // 进入山顶（左侧）
+    {215, 198},   // ← 山顶平坦段（水平台地）
+    {225, 208},   // 右侧下坡
+    {240, 240},   // 山体右缘（闭合用）
+};
+static const int RIDGE_N = sizeof(RIDGE) / sizeof(RIDGE[0]);
+// 岩层向下延展量（每段山脊往下 drop 的厚度）
+static const int ROCK_DROP[10] = { 10, 9, 9, 8, 8, 7, 6, 6, 5, 5 };
+// 岩石裂缝：一组从山脊向下的深色短线 [x1,y1,x2,y2]
+static const int CRACKS[][4] = {
+    { 70, 220,  74, 231},
+    {115, 208, 120, 220},
+    {150, 210, 155, 220},
+    {178, 184, 182, 195},
+    {196, 170, 200, 182},
+    { 95, 214,  99, 224},
+};
+static const int CRACKS_N = sizeof(CRACKS) / sizeof(CRACKS[0]);
+
+// ---- 沿山脊折线插值：给定 x 求坡面高度 y ----
+static int groundAt(int x)
 {
-    // 1) 天空渐变（4 层色带，从深蓝到近白）
-    canvas.fillRect(0, 0,   240, 45, 0x5FA8FF);  // 深蓝
-    canvas.fillRect(0, 45,  240, 45, 0x8FCBFF);  // 蓝
-    canvas.fillRect(0, 90,  240, 45, 0xB5DBFF);  // 浅蓝
-    canvas.fillRect(0, 135, 240, 45, 0xDCEFFF);  // 近白（地平线）
-
-    // 2) 太阳（放左上天空，避免被前景山坡遮挡）
-    canvas.fillCircle(50, 48, 25, TFT_YELLOW);
-
-    // 3) 云朵（白色圆叠加，避开太阳与山坡）
-    canvas.fillCircle(95, 40, 10, TFT_WHITE);
-    canvas.fillCircle(110, 34, 13, TFT_WHITE);
-    canvas.fillCircle(126, 42, 10, TFT_WHITE);
-
-    canvas.fillCircle(135, 78, 9, TFT_WHITE);
-    canvas.fillCircle(148, 72, 12, TFT_WHITE);
-    canvas.fillCircle(162, 79, 9, TFT_WHITE);
-
-    canvas.fillCircle(30, 108, 8, TFT_WHITE);
-    canvas.fillCircle(42, 103, 11, TFT_WHITE);
-    canvas.fillCircle(55, 109, 8, TFT_WHITE);
-
-    // 4) 远山（两层，颜色更浅，位于地平线）
-    canvas.fillTriangle(0, 180, 70, 78, 150, 180, 0x9CD0B0);  // 远山1
-    canvas.fillTriangle(95, 180, 150, 70, 245, 180, 0x86C39A); // 远山2
-
-    // 5) 草地（地面）
-    canvas.fillRect(0, 180, 240, 60, 0x2E8B57);
-
-    // 6) 前景山坡（主角要爬的山）
-    //    三角形：底边在屏幕底部，顶点在右上（205,45）
-    //    左侧这条边就是"左下角爬到右上角"的坡道
-    canvas.fillTriangle(0, 240, 205, 45, 240, 240, 0x228B22);
+    // 用前 RIDGE_N-1 个点（不含右缘 [240,240]）作为爬坡路径
+    for (int i = 0; i < RIDGE_N - 2; i++) {
+        int x1 = RIDGE[i][0], y1 = RIDGE[i][1];
+        int x2 = RIDGE[i+1][0], y2 = RIDGE[i+1][1];
+        if (x >= x1 && x <= x2) {
+            long t = (long)(x - x1) * (y2 - y1);
+            return y1 + (int)(t / (x2 - x1));
+        }
+    }
+    return 240;
 }
 
-// ---- 画一个小人（stick figure，画到 canvas）----
-// cx:     小人水平中心
-// gyL/gyR:左脚 / 右脚踩的地面高度（让两脚分别贴合倾斜坡面）
-// color:  小人颜色
-void drawPerson(int cx, int gyL, int gyR, uint16_t color)
+// ---- 画山景背景（画到 canvas 而非 tft）----
+static void drawScene()
 {
-    // 取两脚高度的中点，作为身体/头部的垂直参考
-    int gyMid = (gyL + gyR) / 2;
+    // 1) 天空渐变（4 层色带，从深蓝到近白，与模拟器一致）
+    canvas.fillRect(0, 0,   240, 45, C_SKY_TOP);
+    canvas.fillRect(0, 45,  240, 45, C_SKY_2);
+    canvas.fillRect(0, 90,  240, 45, C_SKY_3);
+    canvas.fillRect(0, 135, 240, 45, C_SKY_BASE);
 
-    // 头（圆）
-    canvas.fillCircle(cx, gyMid - 46, 9, color);
+    // 2) 山体主轮廓（沿折线山脊 → 每段向下填到底边闭合）
+    for (int i = 0; i < RIDGE_N - 1; i++) {
+        int x1 = RIDGE[i][0],   y1 = RIDGE[i][1];
+        int x2 = RIDGE[i+1][0], y2 = RIDGE[i+1][1];
+        canvas.fillTriangle(x1, y1, x2, y2, x2, 240, C_MOUNTAIN);
+        canvas.fillTriangle(x1, y1, x2, 240, x1, 240, C_MOUNTAIN);
+    }
 
-    // 身体（竖线：从肩膀到髋部）
-    canvas.drawLine(cx, gyMid - 36, cx, gyMid - 14, color);
+    // 3) 岩层：沿每段山脊往下延展的梯形岩石带（受光面逐层变浅）
+    for (int i = 0; i < RIDGE_N - 2; i++) {
+        int x1 = RIDGE[i][0],   y1 = RIDGE[i][1];
+        int x2 = RIDGE[i+1][0], y2 = RIDGE[i+1][1];
+        int d = ROCK_DROP[i];
+        uint16_t c = C_ROCK[i < 6 ? i : 5];
+        canvas.fillTriangle(x1, y1, x2, y2, x2, y2 + d, c);
+        canvas.fillTriangle(x1, y1, x2, y2 + d, x1, y1 + d, c);
+    }
 
-    // 双臂（从肩部向下两侧展开）
-    canvas.drawLine(cx, gyMid - 34, cx - 12, gyMid - 22, color);  // 左臂
-    canvas.drawLine(cx, gyMid - 34, cx + 12, gyMid - 22, color);  // 右臂
+    // 4) 雪帽（贴合山顶台地：底缘压在 y≈198~204，不悬空）
+    canvas.fillTriangle(191, 204, 197, 193, 205, 188, C_SNOW);
+    canvas.fillTriangle(205, 188, 214, 188, 221, 196, C_SNOW);
+    canvas.fillTriangle(221, 196, 215, 202, 203, 203, C_SNOW);
+    canvas.fillTriangle(191, 204, 205, 188, 221, 196, C_SNOW); // 顶部整体罩白，避免接缝
+    canvas.fillTriangle(191, 204, 221, 196, 203, 203, C_SNOW);
 
-    // 双腿（髋部到各自脚的坡面高度）
-    canvas.drawLine(cx, gyMid - 14, cx - 8, gyL, color);          // 左腿
-    canvas.drawLine(cx, gyMid - 14, cx + 8, gyR, color);          // 右腿
+    // 5) 岩石裂缝：几条从山脊向下的深色短线
+    for (int i = 0; i < CRACKS_N; i++) {
+        canvas.drawLine(CRACKS[i][0], CRACKS[i][1], CRACKS[i][2], CRACKS[i][3], C_CRACK);
+    }
+
+    // 6) 山脊受光棱线（沿整条爬坡山脊描白）
+    for (int i = 0; i < RIDGE_N - 2; i++) {
+        canvas.drawLine(RIDGE[i][0], RIDGE[i][1], RIDGE[i+1][0], RIDGE[i+1][1], C_RIDGE);
+    }
 }
 
-// ---- 坡道函数：给定 x，返回坡面高度 y ----
-// 坡道是从 (0,240) 到 (205,45) 的直线
-float slopeAt(float x) { return 240.0f - (195.0f / 205.0f) * x; }
-
-// ---- 在 canvas 上画一帧：背景 + 处于位置 cx 的小人 ----
-void drawFrame(int personX)
+// ---- 画一个小人（stick figure，与模拟器 drawPerson 同步）----
+// cx: 小人水平中心；gyL/gyR: 左脚/右脚踩的地面高度；color: 颜色
+static void drawPerson(int cx, int gyL, int gyR, uint16_t color)
 {
-    drawScene();  // 先重画背景
+    int gyMid = (gyL + gyR) / 2;   // 两脚高度中点，身体/头部的垂直参考
+
+    // 头（圆，缩小）
+    canvas.fillCircle(cx, gyMid - 25, 8, color);
+    // 身体（竖线：从肩到髋）
+    canvas.drawLine(cx, gyMid - 18, cx, gyMid - 10, color);
+    // 双臂（从肩部两侧微微展开）
+    canvas.drawLine(cx, gyMid - 17, cx - 9, gyMid - 9, color);   // 左臂
+    canvas.drawLine(cx, gyMid - 17, cx + 9, gyMid - 9, color);   // 右臂
+    // 双腿（髋部到各自脚的坡面高度，贴合倾斜坡面）
+    canvas.drawLine(cx, gyMid - 10, cx - 6, gyL, color);         // 左腿
+    canvas.drawLine(cx, gyMid - 10, cx + 6, gyR, color);         // 右腿
+}
+
+// ---- 画一帧：背景 + 处于位置 cx 的小人 ----
+static void drawFrame(int personX)
+{
+    drawScene();   // 先重画背景
 
     // 左右脚分别踩在各自 x 对应的坡面高度上
-    int gyL = (int)slopeAt(personX - 8);
-    int gyR = (int)slopeAt(personX + 8);
-    drawPerson(personX, gyL, gyR, TFT_WHITE);
+    int gyL = groundAt(personX - 6);
+    int gyR = groundAt(personX + 6);
+    drawPerson(personX, gyL, gyR, C_PERSON);
 
-    canvas.pushSprite(0, 0);  // 把整帧一次性推到屏幕（无闪烁）
+    canvas.pushSprite(0, 0);   // 把整帧一次性推到屏幕（无闪烁）
 }
 
 void setup()
@@ -157,13 +211,13 @@ void setup()
 
 void loop()
 {
-    // 小人从左下角 (x=20) 爬到右上角 (x=195)，沿坡道逐帧移动
-    for (int x = 20; x <= 195; x += 2) {
+    // 小人从左下角 (x=20) 爬到右上平台 (x=205)，沿山脊折线逐帧移动
+    for (int x = 20; x <= 205; x += 2) {
         drawFrame(x);
         delay(30);   // 每帧 30ms ≈ 33fps
     }
 
-    // 到达山顶，停留片刻
+    // 到达山顶（平台），停留片刻
     delay(1500);
 
     // 重新从左下角开始（循环播放）
