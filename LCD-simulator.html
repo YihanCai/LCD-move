@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LCD 山峰动画模拟器 · 局部画布 (240x240)</title>
+<title>LCD 山峰动画模拟器 · 透明推屏 (240x240)</title>
 <style>
   :root {
     --bg: #1e2430; --panel: #2a3140; --panel2: #333c4f;
@@ -59,8 +59,8 @@
 
   <!-- ============ 控制面板 ============ -->
   <div class="panel">
-    <h1>山峰动画模拟器（步骤 A）</h1>
-    <div class="sub">局部画布 240×80 · 只占屏幕下方 1/3 · 上方为宿主区</div>
+    <h1>山峰动画模拟器（步骤 B）</h1>
+    <div class="sub">局部画布 + 透明推屏 · 山体以下透出宿主背景</div>
 
     <div class="group">
       <div class="label"><span>移动速度</span><span id="spdVal">中</span></div>
@@ -95,9 +95,9 @@
     </div>
 
     <div class="hint">
-      💡 步骤 A：动画画布缩小为 240×80，只画 y160~240 的下方 1/3；
-      上方 2/3 是"宿主区"（模拟其他项目内容，动画不触碰）。
-      山体以上（y160~180）当前为透明打底色（黑），步骤 B 将改为透出宿主内容。
+      💡 步骤 B：透明色按键推屏 —— 动画画布中"透明打底色（黑）"的像素跳过不写入，
+      因此山体/小人之外能透出下方宿主背景；上方 2/3 宿主内容完全不受影响。
+      试试关闭"宿主区"开关对比效果。
     </div>
   </div>
 </div>
@@ -162,31 +162,42 @@ function groundAt(x) {
   return 80;
 }
 
-// ---------- 画"宿主区"（屏幕上方 y 0~160，模拟其他项目的内容）----------
-// 动画完全不触碰这里；关闭开关则显示纯黑（模拟无宿主内容的 LCD）
+// ---------- 画"宿主区"（步骤 B：宿主画满整屏背景，动画透明区透出它）----------
+// 宿主项目真实场景：背景铺满全屏（含动画区下方），动画只在上方叠加山+人
 function drawHostArea() {
-  if (!show.host) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 240, ANIM_Y); return; }
+  if (!show.host) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 240, 240); return; }
 
-  // 背景
-  ctx.fillStyle = '#2A2F3A'; ctx.fillRect(0, 0, 240, ANIM_Y);
-  // 顶部标题栏
+  // 0) 宿主背景铺满整屏（含动画区 y160~240 的底色，供透明区透出）
+  ctx.fillStyle = '#23272F'; ctx.fillRect(0, 0, 240, 240);
+  //    动画区下方再铺一层浅色衬底（更明显看出"透出宿主背景"而非黑色）
+  ctx.fillStyle = '#2E3442'; ctx.fillRect(0, ANIM_Y, 240, ANIM_H);
+
+  // 1) 顶部标题栏
   ctx.fillStyle = '#4DA3FF'; ctx.fillRect(0, 0, 240, 22);
   ctx.fillStyle = '#0B1A2B'; ctx.font = 'bold 13px sans-serif';
   ctx.fillText('MY APP UI', 10, 16);
-  // 三个"卡片"占位
+
+  // 2) 三个"卡片"占位（宿主 UI 内容）
   const cards = [['#E53935','TEMP 26°'], ['#3CBE6D','HR 72'], ['#F5B83B','STEP 0']];
   cards.forEach(([c, t], i) => {
     ctx.fillStyle = c; ctx.fillRect(14 + i * 76, 34, 66, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';
     ctx.fillText(t, 18 + i * 76, 53);
   });
-  // 文字说明区
+
+  // 3) 文字说明区（上方）
   ctx.fillStyle = '#9AA7BD'; ctx.font = '11px sans-serif';
   ctx.fillText('← 宿主区（上方 2/3）', 14, 104);
   ctx.fillText('   每帧由宿主绘制，动画不触碰', 14, 120);
   ctx.fillText('   下方 y=160 为动画区边界', 14, 136);
-  // 分界线
-  ctx.fillStyle = '#6B7485'; ctx.fillRect(0, ANIM_Y - 1, 240, 1);
+
+  // 4) 分界线（y=160）
+  ctx.fillStyle = '#6B7485'; ctx.fillRect(0, ANIM_Y - 0.5, 240, 1);
+
+  // 5) 动画区下方的宿主背景标注（说明透明区透出的是它）
+  ctx.fillStyle = '#566078';
+  ctx.font = '9px sans-serif';
+  ctx.fillText('── 宿主背景（动画透明区透出此层）──', 34, 238);
 }
 
 // ---------- 画山景背景（画到离屏 anim，局部坐标）----------
@@ -282,11 +293,25 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.beginPath(); actx.moveTo(cx, gyMid-10); actx.lineTo(cx+6, gyR); actx.stroke();      // 右腿
 }
 
+// ---------- 透明色按键推屏（对应 LovyanGFX pushSprite(x, y, transp)）----------
+// 离屏动画画布中颜色 == TRANSP(黑) 的像素变为全透明再贴屏 → 该处露出下方宿主内容
+function pushWithTransp() {
+  const imgData = actx.getImageData(0, 0, W, ANIM_H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i] === 0 && d[i+1] === 0 && d[i+2] === 0) {  // 等于 TRANSP(0x0000)
+      d[i+3] = 0;   // alpha = 0 → 不覆盖宿主内容
+    }
+  }
+  actx.putImageData(imgData, 0, 0);
+  ctx.drawImage(anim, 0, ANIM_Y);
+}
+
 // ---------- 渲染一帧 ----------
-// 对应 main.cpp 的 drawFrame()：清屏 → 画宿主区 → 画动画到离屏 → 推屏（透明跳色）
+// 对应 main.cpp 的 drawFrame()：清屏 → 画宿主区 → 画动画到离屏 → 透明按键推屏
 function drawFrame(personX) {
   ctx.clearRect(0, 0, W, SCR_H);
-  drawHostArea();                          // ① 宿主区（上方 2/3，动画不碰）
+  drawHostArea();                          // ① 宿主区（整屏背景 + 上方 UI，动画不碰）
   drawMountain();                          // ② 山体画到离屏 anim
   if (show.person) {
     const gyL = Math.floor(groundAt(personX - 6));
@@ -297,9 +322,8 @@ function drawFrame(personX) {
     document.getElementById('roGR').textContent = gyR;
     document.getElementById('xVal').textContent = personX;
   }
-  // ④ 推屏：把离屏动画画布贴到屏幕 (0, ANIM_Y)，等价 pushSprite(0, 160)
-  //    步骤 A 暂未做透明跳色（整块 240x80 覆盖），步骤 B 再加
-  ctx.drawImage(anim, 0, ANIM_Y);
+  // ④ 透明按键推屏：TRANSP 像素跳过 → 山体与小人之下的宿主背景可见
+  pushWithTransp();
 }
 
 // ============================================================

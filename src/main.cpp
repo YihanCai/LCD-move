@@ -192,9 +192,48 @@ static void drawFrame(int personX)
     int gyR = groundAt(personX + 6);
     drawPerson(personX, gyL, gyR, C_PERSON);
 
-    // 推屏：只推到屏幕下方 1/3 区域 (0,160)，上方宿主内容不受影响
-    // 步骤 A：暂不带透明跳色（整块 240x80 覆盖），步骤 B 再加
-    canvas.pushSprite(0, ANIM_Y);
+    // 推屏：只推到屏幕下方 1/3 区域 (0,160)
+    // 步骤 B：透明色按键 —— 画布中颜色 == C_TRANSP 的像素跳过不写入，
+    //         山体/小人之外的区域透出下方宿主内容，上方宿主内容不受影响
+    canvas.pushSprite(0, ANIM_Y, C_TRANSP);
+}
+
+// ---- 宿主模拟测试（步骤 B 验收）：画上方内容 + 动画区下方宿主背景 ----
+// 真实项目里这段代码由宿主自己写；这里用于验证动画确实不影响宿主
+static void drawHostSim()
+{
+    // 0) 宿主背景：铺满整屏（含动画区下方的底色，供透明区透出）
+    tft.fillRect(0, 0,      240, ANIM_Y, 0x2125);   // 上方宿主背景（深灰蓝）
+    tft.fillRect(0, ANIM_Y, 240, ANIM_H, 0x29A8);   // 动画区下方的宿主底色
+
+    // 1) 顶部标题栏
+    tft.fillRect(0, 0, 240, 22, 0x4D1F);
+    tft.setTextColor(0x08C5);       // 深色文字
+    tft.setTextSize(1);
+    tft.setFont(&fonts::Font0);
+    tft.setCursor(10, 6);
+    tft.print("MY APP UI");
+
+    // 2) 三个彩色"卡片"（宿主 UI 内容）
+    tft.fillRect(14, 34, 66, 32, 0xE1C6);   // 红
+    tft.fillRect(90, 34, 66, 32, 0x3DED);   // 绿
+    tft.fillRect(166, 34, 66, 32, 0xF5C7);  // 黄
+    tft.setTextColor(0xFFFF);
+    tft.setCursor(18, 44); tft.print("TEMP");
+    tft.setCursor(94, 44); tft.print("HR");
+    tft.setCursor(170, 44); tft.print("STEP");
+
+    // 3) 说明文字（宿主区）
+    tft.setTextColor(0x9D37);
+    tft.setCursor(14, 104);
+    tft.print("host area: upper 2/3");
+    tft.setCursor(14, 120);
+    tft.print("animation must NOT touch");
+    tft.setCursor(14, 136);
+    tft.print("boundary y=160 below");
+
+    // 4) 分界线
+    tft.drawFastHLine(0, 159, 240, 0x6BB0);
 }
 
 void setup()
@@ -215,11 +254,12 @@ void loop()
 {
     // 小人从左下角 (x=20) 爬到右上平台 (x=205)，沿山脊折线逐帧移动
     for (int x = 20; x <= 205; x += 2) {
-        drawFrame(x);
-        delay(30);   // 每帧 30ms ≈ 33fps
+        drawHostSim();   // 宿主每帧重画上方内容 + 动画区下方底色
+        drawFrame(x);    // 动画透明推屏，只叠加下方 1/3
+        delay(30);       // 每帧 30ms ≈ 33fps
     }
 
-    // 到达山顶（平台），停留片刻
+    // 到达山顶（平台），停留片刻（宿主继续重画，动画静止）
     delay(1500);
 
     // 重新从左下角开始（循环播放）
