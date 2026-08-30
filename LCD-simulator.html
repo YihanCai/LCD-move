@@ -279,25 +279,25 @@ function drawMountain() {
   }
 }
 
-// ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 前后摆臂）----------
+// ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 摆臂 + 迈腿）----------
 function drawPerson(cx, gyL, gyR, color) {
   const gyMid = Math.floor((gyL + gyR) / 2);
-  // 摆臂相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
+  // 摆臂/迈腿相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
   const ph = (cx - 20) / 24 * Math.PI * 2;   // 相位角 0~2π
   const s = Math.sin(ph);                    // -1~1，决定前后摆
 
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
-  actx.beginPath(); actx.arc(cx + 5, gyMid - 28, 8, 0, Math.PI*2); actx.fill();                        // 头（略前探）
-  actx.beginPath(); actx.moveTo(cx + 5, gyMid - 20); actx.lineTo(cx + 4, gyMid - 18); actx.stroke();    // 脖子（下巴→肩，略斜）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx - 2, gyMid - 10); actx.stroke();    // 躯干（前倾：肩→髋）
+  actx.beginPath(); actx.arc(cx + 4, gyMid - 28, 8, 0, Math.PI*2); actx.fill();                        // 头（略前探）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 20); actx.lineTo(cx + 2, gyMid - 18); actx.stroke();    // 脖子（下巴→肩）
+  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 18); actx.lineTo(cx - 1, gyMid - 9); actx.stroke();     // 躯干（挺拔，微前倾：肩→髋）
 
   // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
   const L = 10;                    // 臂长 (px)
   const SWING_A = 0.6;             // 摆动角幅度 (弧度) ≈ ±34°
   const BASE_A = 0.2;              // 自然下垂略前倾 (弧度)
-  const sxj = cx + 4, syj = gyMid - 18;          // 肩
+  const sxj = cx + 2, syj = gyMid - 18;          // 肩
   // 前臂角：BASE + SWING*sin；后臂角：-BASE - SWING*sin（反相 180°）
   const aF = BASE_A + SWING_A * s;
   const hfX = sxj + L * Math.sin(aF), hfY = syj + L * Math.cos(aF);     // 前手（弧线位）
@@ -312,16 +312,18 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.beginPath(); actx.moveTo(sxj, syj); actx.lineTo(ebX, ebY); actx.stroke();    // 后臂上段
   actx.beginPath(); actx.moveTo(ebX, ebY); actx.lineTo(hbX, hbY); actx.stroke();    // 后臂下段→后手
 
-  // —— 迈腿（阶段2）：双腿相位交替迈步，脚贴合坡面，对角协同 ——
-  // 对角协同：左腿相位 = 右臂(+s)，右腿相位 = 左臂(-s) → 迈左腿伸右臂
-  const LEG_STEP = 5;                    // 脚前后步幅 (px)
-  const hix = cx - 2, hiy = gyMid - 10;  // 髋（躯干下端）
-  // 左腿（后腿，相位 +s：s>0 时向前迈）
-  const lFootX = cx - 7 + LEG_STEP * s;
-  const lFootY = Math.floor(groundAt(lFootX));
-  // 右腿（前腿，相位 -s：s>0 时向后收）
-  const rFootX = cx + 7 - LEG_STEP * s;
-  const rFootY = Math.floor(groundAt(rFootX));
+  // —— 迈腿（阶段2 v2）：双腿从髋向两侧大幅交替，跨步腿抬起，支撑腿踩坡 ——
+  const hix = cx - 1, hiy = gyMid - 9;         // 髋（与躯干下端一致）
+  const SWING_LEG = 6;                         // 脚摆动幅度 (px)，跨越身体中线
+  const LIFT = 3;                              // 迈步腿抬升 (px)
+  // 左腿：x = 髋 + 6*sin(ph)（s=+1 最前）；右腿反相（s=+1 最后）
+  const lFootX = hix + SWING_LEG * s;
+  const rFootX = hix - SWING_LEG * s;
+  // 抬腿：正在向前摆的那条腿抬起（cos ph>0 左腿抬，<0 右腿抬），另一条踩坡
+  const lLift = Math.max(0, Math.cos(ph)) * LIFT;
+  const rLift = Math.max(0, -Math.cos(ph)) * LIFT;
+  const lFootY = Math.floor(groundAt(lFootX)) - lLift;
+  const rFootY = Math.floor(groundAt(rFootX)) - rLift;
   // 膝：髋→脚中点，微微上抬保持弯曲（两段式）
   const lKneeX = (hix + lFootX) / 2, lKneeY = (hiy + lFootY) / 2 - 2;
   const rKneeX = (hix + rFootX) / 2, rKneeY = (hiy + rFootY) / 2 - 2;
