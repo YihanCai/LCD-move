@@ -175,11 +175,19 @@ void MountainAnim::drawPerson()
     int efX = sxj + (hfX - sxj) / 2, efY = syj + (hfY - syj) / 2;
     int ebX = sxj + (hbX - sxj) / 2, ebY = syj + (hbY - syj) / 2;
 
-    // 腿（阶段2再做迈腿，先保持贴合坡面）
-    int fk2x = _personX + (int)(4 * sx), fk2y = gyMid - (int)(4 * scale);   // 前腿膝
-    int ffx  = _personX + (int)(7 * sx);                  // 前脚（高坡 gyR）
-    int bk2x = _personX - (int)(5 * sx), bk2y = gyMid - (int)(4 * scale);   // 后腿膝
-    int bfx  = _personX - (int)(7 * sx);                  // 后脚（低坡 gyL）
+    // —— 迈腿（阶段2）：双腿相位交替迈步，脚贴合坡面，对角协同 ——
+    // 对角协同：左腿相位 = 右臂(+s)，右腿相位 = 左臂(-s) → 迈左腿伸右臂
+    int LEG_STEP = (int)(5 * sx);                          // 脚前后步幅
+    int KNEE_LIFT = (int)(2 * scale);                      // 膝上抬量（保持弯曲）
+    // 左腿（后腿，相位 +s：s>0 时向前迈）
+    int lFootX = _personX - (int)(7 * sx) + LEG_STEP * (int)(s);
+    int lFootY = groundAt(lFootX);
+    // 右腿（前腿，相位 -s：s>0 时向后收）
+    int rFootX = _personX + (int)(7 * sx) - LEG_STEP * (int)(s);
+    int rFootY = groundAt(rFootX);
+    // 膝：髋→脚中点，微微上抬保持弯曲（两段式）
+    int lKneeX = (t2x + lFootX) / 2, lKneeY = (t2y + lFootY) / 2 - KNEE_LIFT;
+    int rKneeX = (t2x + rFootX) / 2, rKneeY = (t2y + rFootY) / 2 - KNEE_LIFT;
 
     _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
     _canvas.drawLine(hx, gyMid - (int)(20 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
@@ -188,10 +196,10 @@ void MountainAnim::drawPerson()
     _canvas.drawLine(efX, efY, hfX, hfY, _person);                            // 前臂下段→前手
     _canvas.drawLine(sxj, syj, ebX, ebY, _person);                            // 后臂上段
     _canvas.drawLine(ebX, ebY, hbX, hbY, _person);                            // 后臂下段→后手
-    _canvas.drawLine(t2x, t2y, fk2x, fk2y, _person);                          // 前腿上段
-    _canvas.drawLine(fk2x, fk2y, ffx, gyR, _person);                          // 前腿下段→脚（高坡）
-    _canvas.drawLine(t2x, t2y, bk2x, bk2y, _person);                          // 后腿上段
-    _canvas.drawLine(bk2x, bk2y, bfx, gyL, _person);                          // 后腿下段→脚（低坡）
+    _canvas.drawLine(t2x, t2y, lKneeX, lKneeY, _person);                      // 左腿上段
+    _canvas.drawLine(lKneeX, lKneeY, lFootX, lFootY, _person);                // 左腿下段→脚
+    _canvas.drawLine(t2x, t2y, rKneeX, rKneeY, _person);                      // 右腿上段
+    _canvas.drawLine(rKneeX, rKneeY, rFootX, rFootY, _person);                // 右腿下段→脚
 }
 
 // ---- 自动爬坡：每 tick 前进 stepPx，到终点后循环 ----

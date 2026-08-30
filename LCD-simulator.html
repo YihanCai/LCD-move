@@ -312,10 +312,24 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.beginPath(); actx.moveTo(sxj, syj); actx.lineTo(ebX, ebY); actx.stroke();    // 后臂上段
   actx.beginPath(); actx.moveTo(ebX, ebY); actx.lineTo(hbX, hbY); actx.stroke();    // 后臂下段→后手
 
-  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx + 4, gyMid - 4); actx.stroke();     // 前腿上段（阶段2再做迈腿，先保持）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 4); actx.lineTo(cx + 7, gyR); actx.stroke();            // 前腿下段→脚（高坡）
-  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx - 5, gyMid - 4); actx.stroke();     // 后腿上段
-  actx.beginPath(); actx.moveTo(cx - 5, gyMid - 4); actx.lineTo(cx - 7, gyL); actx.stroke();            // 后腿下段→脚（低坡）
+  // —— 迈腿（阶段2）：双腿相位交替迈步，脚贴合坡面，对角协同 ——
+  // 对角协同：左腿相位 = 右臂(+s)，右腿相位 = 左臂(-s) → 迈左腿伸右臂
+  const LEG_STEP = 5;                    // 脚前后步幅 (px)
+  const hix = cx - 2, hiy = gyMid - 10;  // 髋（躯干下端）
+  // 左腿（后腿，相位 +s：s>0 时向前迈）
+  const lFootX = cx - 7 + LEG_STEP * s;
+  const lFootY = Math.floor(groundAt(lFootX));
+  // 右腿（前腿，相位 -s：s>0 时向后收）
+  const rFootX = cx + 7 - LEG_STEP * s;
+  const rFootY = Math.floor(groundAt(rFootX));
+  // 膝：髋→脚中点，微微上抬保持弯曲（两段式）
+  const lKneeX = (hix + lFootX) / 2, lKneeY = (hiy + lFootY) / 2 - 2;
+  const rKneeX = (hix + rFootX) / 2, rKneeY = (hiy + rFootY) / 2 - 2;
+
+  actx.beginPath(); actx.moveTo(hix, hiy); actx.lineTo(lKneeX, lKneeY); actx.stroke();   // 左腿上段
+  actx.beginPath(); actx.moveTo(lKneeX, lKneeY); actx.lineTo(lFootX, lFootY); actx.stroke(); // 左腿下段→脚
+  actx.beginPath(); actx.moveTo(hix, hiy); actx.lineTo(rKneeX, rKneeY); actx.stroke();   // 右腿上段
+  actx.beginPath(); actx.moveTo(rKneeX, rKneeY); actx.lineTo(rFootX, rFootY); actx.stroke(); // 右腿下段→脚
 }
 
 // ---------- 透明色按键推屏（对应 LovyanGFX pushSprite(x, y, transp)）----------
