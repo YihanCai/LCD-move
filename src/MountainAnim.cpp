@@ -146,7 +146,7 @@ void MountainAnim::drawPerson()
     int gyR = groundAt(_personX + (int)(6 * sx));
     int gyMid = (gyL + gyR) / 2;
 
-    // 基准尺寸（高 80 时）：头半径 7、头中心 gyMid-28、身 gyMid-18~-9
+    // 基准尺寸（高 80 时）：头半径 7、头中心 gyMid-24、身 gyMid-15~-8
     int hr = (int)(7 * scale);
     if (hr < 2) hr = 2;
 
@@ -156,13 +156,13 @@ void MountainAnim::drawPerson()
 
     // 侧身攀爬姿态（面朝右）：头略前探、躯干挺拔微前倾、手臂绕肩前后弧线摆（钟摆式）、双腿跨步交替
     int hx  = _personX + (int)(4 * sx);                   // 头中心（略前探）
-    int hy  = gyMid - (int)(28 * scale);
-    int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(18 * scale);  // 脖子下端（肩）
-    int t1x = _personX + (int)(2 * sx), t1y = gyMid - (int)(18 * scale);  // 躯干上端（肩）
-    int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(9 * scale);   // 躯干下端（髋）
+    int hy  = gyMid - (int)(24 * scale);
+    int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(15 * scale);  // 脖子下端（肩）
+    int t1x = _personX + (int)(2 * sx), t1y = gyMid - (int)(15 * scale);  // 躯干上端（肩）
+    int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(8 * scale);   // 躯干下端（髋）
 
     // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
-    float L       = 10.0f * sx;            // 臂长
+    float L       = 9.0f * sx;             // 臂长（缩小）
     float SWING_A = 0.6f;                  // 摆动角幅度 (弧度) ≈ ±34°
     float BASE_A  = 0.2f;                  // 自然下垂略前倾 (弧度)
     int   sxj = t1x, syj = t1y;            // 肩
@@ -176,7 +176,7 @@ void MountainAnim::drawPerson()
     int ebX = sxj + (hbX - sxj) / 2, ebY = syj + (hbY - syj) / 2;
 
     // —— 迈腿（阶段2 v2）：双腿从髋向两侧大幅交替，跨步腿抬起，支撑腿踩坡 ——
-    int SWING_LEG = (int)(6 * sx);                         // 脚摆动幅度 (px)，跨越身体中线
+    int SWING_LEG = (int)(5 * sx);                         // 脚摆动幅度 (px)，跨越身体中线（缩小）
     int LIFT      = (int)(3 * scale);                      // 迈步腿抬升 (px)
     // 左腿：x = 髋 + 6*sin(ph)（s=+1 最前）；右腿反相（s=+1 最后）
     int lFootX = t2x + (int)(SWING_LEG * s);
@@ -192,7 +192,7 @@ void MountainAnim::drawPerson()
     int rKneeX = (t2x + rFootX) / 2, rKneeY = (t2y + rFootY) / 2 - (int)(2 * scale);
 
     _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
-    _canvas.drawLine(hx, gyMid - (int)(21 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
+    _canvas.drawLine(hx, gyMid - (int)(17 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
     _canvas.drawLine(t1x, t1y, t2x, t2y, _person);                            // 躯干（挺拔，微前倾）
     _canvas.drawLine(sxj, syj, efX, efY, _person);                            // 前臂上段
     _canvas.drawLine(efX, efY, hfX, hfY, _person);                            // 前臂下段→前手

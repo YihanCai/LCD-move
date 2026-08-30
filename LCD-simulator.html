@@ -289,15 +289,15 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
-  actx.beginPath(); actx.arc(cx + 4, gyMid - 28, 7, 0, Math.PI*2); actx.fill();                        // 头（略前探，改小一号）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 21); actx.lineTo(cx + 2, gyMid - 18); actx.stroke();    // 脖子（下巴→肩）
-  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 18); actx.lineTo(cx - 1, gyMid - 9); actx.stroke();     // 躯干（挺拔，微前倾：肩→髋）
+  actx.beginPath(); actx.arc(cx + 4, gyMid - 24, 7, 0, Math.PI*2); actx.fill();                        // 头（保持7px，略前探）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 17); actx.lineTo(cx + 2, gyMid - 15); actx.stroke();    // 脖子（下巴→肩）
+  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 15); actx.lineTo(cx - 1, gyMid - 8); actx.stroke();     // 躯干（挺拔，微前倾：肩→髋）
 
   // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
-  const L = 10;                    // 臂长 (px)
+  const L = 9;                     // 臂长 (px，缩小)
   const SWING_A = 0.6;             // 摆动角幅度 (弧度) ≈ ±34°
   const BASE_A = 0.2;              // 自然下垂略前倾 (弧度)
-  const sxj = cx + 2, syj = gyMid - 18;          // 肩
+  const sxj = cx + 2, syj = gyMid - 15;          // 肩（对齐躯干上端）
   // 前臂角：BASE + SWING*sin；后臂角：-BASE - SWING*sin（反相 180°）
   const aF = BASE_A + SWING_A * s;
   const hfX = sxj + L * Math.sin(aF), hfY = syj + L * Math.cos(aF);     // 前手（弧线位）
@@ -313,8 +313,8 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.beginPath(); actx.moveTo(ebX, ebY); actx.lineTo(hbX, hbY); actx.stroke();    // 后臂下段→后手
 
   // —— 迈腿（阶段2 v2）：双腿从髋向两侧大幅交替，跨步腿抬起，支撑腿踩坡 ——
-  const hix = cx - 1, hiy = gyMid - 9;         // 髋（与躯干下端一致）
-  const SWING_LEG = 6;                         // 脚摆动幅度 (px)，跨越身体中线
+  const hix = cx - 1, hiy = gyMid - 8;         // 髋（与躯干下端一致）
+  const SWING_LEG = 5;                         // 脚摆动幅度 (px)，跨越身体中线（缩小）
   const LIFT = 3;                              // 迈步腿抬升 (px)
   // 左腿：x = 髋 + 6*sin(ph)（s=+1 最前）；右腿反相（s=+1 最后）
   const lFootX = hix + SWING_LEG * s;
