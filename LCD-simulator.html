@@ -279,19 +279,26 @@ function drawMountain() {
   }
 }
 
-// ---------- 画小人（画到离屏 anim，局部坐标）----------
+// ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 摆臂）----------
 function drawPerson(cx, gyL, gyR, color) {
   const gyMid = Math.floor((gyL + gyR) / 2);
+  // 摆臂相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
+  const ph = (cx - 20) / 24 * Math.PI * 2;   // 相位角 0~2π
+  const s = Math.sin(ph);                    // -1~1，决定前后摆
+  const SWING = 4;                           // 手前后摆幅 (px)
+  const SWING_E = 2;                         // 肘跟随摆幅 (px)
+
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
-  actx.beginPath(); actx.arc(cx + 2, gyMid - 26, 8, 0, Math.PI*2); actx.fill();                        // 头（略前）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 19); actx.lineTo(cx - 2, gyMid - 10); actx.stroke();    // 躯干（前倾）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx + 12, gyMid - 15); actx.stroke();   // 前臂上段
-  actx.beginPath(); actx.moveTo(cx + 12, gyMid - 15); actx.lineTo(cx + 13, gyMid - 13); actx.stroke();  // 前臂下段→手
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx - 3, gyMid - 14); actx.stroke();    // 后臂上段
-  actx.beginPath(); actx.moveTo(cx - 3, gyMid - 14); actx.lineTo(cx - 8, gyMid - 11); actx.stroke();    // 后臂下段→手
-  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx + 4, gyMid - 4); actx.stroke();     // 前腿上段
+  actx.beginPath(); actx.arc(cx + 2, gyMid - 28, 8, 0, Math.PI*2); actx.fill();                        // 头（抬高，留出脖子）
+  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 20); actx.lineTo(cx + 4, gyMid - 18); actx.stroke();    // 脖子（下巴→肩）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx - 2, gyMid - 10); actx.stroke();    // 躯干（前倾：肩→髋）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx + 12 + SWING_E*s, gyMid - 15); actx.stroke();  // 前臂上段（肘随摆）
+  actx.beginPath(); actx.moveTo(cx + 12 + SWING_E*s, gyMid - 15); actx.lineTo(cx + 13 + SWING*s, gyMid - 13); actx.stroke(); // 前臂下段→手（前后摆）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx - 3 - SWING_E*s, gyMid - 14); actx.stroke();  // 后臂上段（反相随摆）
+  actx.beginPath(); actx.moveTo(cx - 3 - SWING_E*s, gyMid - 14); actx.lineTo(cx - 8 - SWING*s, gyMid - 11); actx.stroke(); // 后臂下段→手（反相）
+  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx + 4, gyMid - 4); actx.stroke();     // 前腿上段（阶段2再做迈腿，先保持）
   actx.beginPath(); actx.moveTo(cx + 4, gyMid - 4); actx.lineTo(cx + 7, gyR); actx.stroke();            // 前腿下段→脚（高坡）
   actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx - 5, gyMid - 4); actx.stroke();     // 后腿上段
   actx.beginPath(); actx.moveTo(cx - 5, gyMid - 4); actx.lineTo(cx - 7, gyL); actx.stroke();            // 后腿下段→脚（低坡）
