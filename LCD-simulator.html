@@ -289,8 +289,8 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
-  actx.beginPath(); actx.arc(cx + 4, gyMid - 28, 8, 0, Math.PI*2); actx.fill();                        // 头（略前探）
-  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 20); actx.lineTo(cx + 2, gyMid - 18); actx.stroke();    // 脖子（下巴→肩）
+  actx.beginPath(); actx.arc(cx + 4, gyMid - 28, 7, 0, Math.PI*2); actx.fill();                        // 头（略前探，改小一号）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 21); actx.lineTo(cx + 2, gyMid - 18); actx.stroke();    // 脖子（下巴→肩）
   actx.beginPath(); actx.moveTo(cx + 2, gyMid - 18); actx.lineTo(cx - 1, gyMid - 9); actx.stroke();     // 躯干（挺拔，微前倾：肩→髋）
 
   // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——

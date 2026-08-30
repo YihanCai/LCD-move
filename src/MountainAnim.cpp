@@ -146,8 +146,8 @@ void MountainAnim::drawPerson()
     int gyR = groundAt(_personX + (int)(6 * sx));
     int gyMid = (gyL + gyR) / 2;
 
-    // 基准尺寸（高 80 时）：头半径 8、头中心 gyMid-28、身 gyMid-18~-10
-    int hr = (int)(8 * scale);
+    // 基准尺寸（高 80 时）：头半径 7、头中心 gyMid-28、身 gyMid-18~-9
+    int hr = (int)(7 * scale);
     if (hr < 2) hr = 2;
 
     // 摆臂相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
@@ -192,7 +192,7 @@ void MountainAnim::drawPerson()
     int rKneeX = (t2x + rFootX) / 2, rKneeY = (t2y + rFootY) / 2 - (int)(2 * scale);
 
     _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
-    _canvas.drawLine(hx, gyMid - (int)(20 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
+    _canvas.drawLine(hx, gyMid - (int)(21 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
     _canvas.drawLine(t1x, t1y, t2x, t2y, _person);                            // 躯干（挺拔，微前倾）
     _canvas.drawLine(sxj, syj, efX, efY, _person);                            // 前臂上段
     _canvas.drawLine(efX, efY, hfX, hfY, _person);                            // 前臂下段→前手
