@@ -154,8 +154,8 @@ void MountainAnim::drawPerson()
     float ph = (float)(_personX - _minX) / 24.0f * 6.2831853f;   // 0~2π
     float s  = sinf(ph);                                          // -1~1，决定前后摆
 
-    // 侧身攀爬姿态（面朝右）：头抬高留脖子、躯干前倾、手臂绕肩前后弧线摆（钟摆式）
-    int hx  = _personX + (int)(2 * sx);                   // 头中心
+    // 侧身攀爬姿态（面朝右）：头前探往前冲、躯干前倾、手臂绕肩前后弧线摆（钟摆式）
+    int hx  = _personX + (int)(7 * sx);                   // 头中心（前探）
     int hy  = gyMid - (int)(28 * scale);
     int n2x = _personX + (int)(4 * sx), n2y = gyMid - (int)(18 * scale);  // 脖子下端（肩）
     int t1x = _personX + (int)(4 * sx), t1y = gyMid - (int)(18 * scale);  // 躯干上端（肩）
