@@ -285,12 +285,16 @@ function drawPerson(cx, gyL, gyR, color) {
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
-  actx.beginPath(); actx.arc(cx, gyMid - 25, 8, 0, Math.PI*2); actx.fill();          // 头（缩小）
-  actx.beginPath(); actx.moveTo(cx, gyMid-18); actx.lineTo(cx, gyMid-10); actx.stroke(); // 身体
-  actx.beginPath(); actx.moveTo(cx, gyMid-17); actx.lineTo(cx-9, gyMid-9); actx.stroke(); // 左臂
-  actx.beginPath(); actx.moveTo(cx, gyMid-17); actx.lineTo(cx+9, gyMid-9); actx.stroke(); // 右臂
-  actx.beginPath(); actx.moveTo(cx, gyMid-10); actx.lineTo(cx-6, gyL); actx.stroke();      // 左腿
-  actx.beginPath(); actx.moveTo(cx, gyMid-10); actx.lineTo(cx+6, gyR); actx.stroke();      // 右腿
+  actx.beginPath(); actx.arc(cx + 2, gyMid - 26, 8, 0, Math.PI*2); actx.fill();                        // 头（略前）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 19); actx.lineTo(cx - 2, gyMid - 10); actx.stroke();    // 躯干（前倾）
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx + 12, gyMid - 15); actx.stroke();   // 前臂上段
+  actx.beginPath(); actx.moveTo(cx + 12, gyMid - 15); actx.lineTo(cx + 13, gyMid - 13); actx.stroke();  // 前臂下段→手
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 18); actx.lineTo(cx - 3, gyMid - 14); actx.stroke();    // 后臂上段
+  actx.beginPath(); actx.moveTo(cx - 3, gyMid - 14); actx.lineTo(cx - 8, gyMid - 11); actx.stroke();    // 后臂下段→手
+  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx + 4, gyMid - 4); actx.stroke();     // 前腿上段
+  actx.beginPath(); actx.moveTo(cx + 4, gyMid - 4); actx.lineTo(cx + 7, gyR); actx.stroke();            // 前腿下段→脚（高坡）
+  actx.beginPath(); actx.moveTo(cx - 2, gyMid - 10); actx.lineTo(cx - 5, gyMid - 4); actx.stroke();     // 后腿上段
+  actx.beginPath(); actx.moveTo(cx - 5, gyMid - 4); actx.lineTo(cx - 7, gyL); actx.stroke();            // 后腿下段→脚（低坡）
 }
 
 // ---------- 透明色按键推屏（对应 LovyanGFX pushSprite(x, y, transp)）----------

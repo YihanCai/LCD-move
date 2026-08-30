@@ -137,30 +137,43 @@ void MountainAnim::drawScene()
 void MountainAnim::drawPerson()
 {
     // 缩放系数
+    float sx = (float)_w / 240.0f;
     float scale = (float)_h / 80.0f;
 
     // 左右脚分别踩在各自 x 的坡面高度上
-    int gyL = groundAt(_personX - (int)(6 * ((float)_w / 240.0f)));
-    int gyR = groundAt(_personX + (int)(6 * ((float)_w / 240.0f)));
+    int gyL = groundAt(_personX - (int)(6 * sx));
+    int gyR = groundAt(_personX + (int)(6 * sx));
     int gyMid = (gyL + gyR) / 2;
 
-    // 基准尺寸（高 80 时）：头半径 8、头中心 gyMid-25、身 gyMid-18~-10、臂 gyMid-17、腿 gyMid-10
+    // 基准尺寸（高 80 时）：头半径 8、头中心 gyMid-26、身 gyMid-19~-10
     int hr = (int)(8 * scale);
     if (hr < 2) hr = 2;
-    int headY  = gyMid - (int)(25 * scale);
-    int body1  = gyMid - (int)(18 * scale);
-    int body2  = gyMid - (int)(10 * scale);
-    int armY   = gyMid - (int)(17 * scale);
-    int armTip = gyMid - (int)(9 * scale);
-    int armDx  = (int)(9 * ((float)_w / 240.0f));
-    int legDx  = (int)(6 * ((float)_w / 240.0f));
 
-    _canvas.fillCircle(_personX, headY, hr, _person);                 // 头
-    _canvas.drawLine(_personX, body1, _personX, body2, _person);      // 身体
-    _canvas.drawLine(_personX, armY, _personX - armDx, armTip, _person);  // 左臂
-    _canvas.drawLine(_personX, armY, _personX + armDx, armTip, _person);  // 右臂
-    _canvas.drawLine(_personX, body2, _personX - legDx, gyL, _person);    // 左腿
-    _canvas.drawLine(_personX, body2, _personX + legDx, gyR, _person);    // 右腿
+    // 侧身攀爬姿态（面朝右）：头略前、躯干前倾、四肢两段弯曲
+    int hx  = _personX + (int)(2 * sx);                   // 头中心
+    int hy  = gyMid - (int)(26 * scale);
+    int t1x = _personX + (int)(4 * sx), t1y = gyMid - (int)(19 * scale);   // 躯干上端
+    int t2x = _personX - (int)(2 * sx), t2y = gyMid - (int)(10 * scale);   // 躯干下端（髋）
+    int shx = _personX + (int)(4 * sx), shy = gyMid - (int)(18 * scale);   // 肩
+    int fa2x = _personX + (int)(12 * sx), fa2y = gyMid - (int)(15 * scale); // 前臂肘
+    int fahx = _personX + (int)(13 * sx), fahy = gyMid - (int)(13 * scale); // 前手
+    int ba2x = _personX - (int)(3 * sx), ba2y = gyMid - (int)(14 * scale);  // 后臂肘
+    int bahx = _personX - (int)(8 * sx), bahy = gyMid - (int)(11 * scale);  // 后手
+    int fk2x = _personX + (int)(4 * sx), fk2y = gyMid - (int)(4 * scale);   // 前腿膝
+    int ffx  = _personX + (int)(7 * sx);                  // 前脚（高坡 gyR）
+    int bk2x = _personX - (int)(5 * sx), bk2y = gyMid - (int)(4 * scale);   // 后腿膝
+    int bfx  = _personX - (int)(7 * sx);                  // 后脚（低坡 gyL）
+
+    _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
+    _canvas.drawLine(t1x, t1y, t2x, t2y, _person);                            // 躯干（前倾）
+    _canvas.drawLine(shx, shy, fa2x, fa2y, _person);                          // 前臂上段
+    _canvas.drawLine(fa2x, fa2y, fahx, fahy, _person);                        // 前臂下段→手
+    _canvas.drawLine(shx, shy, ba2x, ba2y, _person);                          // 后臂上段
+    _canvas.drawLine(ba2x, ba2y, bahx, bahy, _person);                        // 后臂下段→手
+    _canvas.drawLine(t2x, t2y, fk2x, fk2y, _person);                          // 前腿上段
+    _canvas.drawLine(fk2x, fk2y, ffx, gyR, _person);                          // 前腿下段→脚（高坡）
+    _canvas.drawLine(t2x, t2y, bk2x, bk2y, _person);                          // 后腿上段
+    _canvas.drawLine(bk2x, bk2y, bfx, gyL, _person);                          // 后腿下段→脚（低坡）
 }
 
 // ---- 自动爬坡：每 tick 前进 stepPx，到终点后循环 ----
