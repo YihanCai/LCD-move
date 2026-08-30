@@ -152,20 +152,30 @@ void MountainAnim::drawPerson()
 
     // 摆臂相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
     float ph = (float)(_personX - _minX) / 24.0f * 6.2831853f;   // 0~2π
-    float s  = sinf(ph);                                          // -1~1
-    int  swing   = (int)(4 * sx);                                 // 手前后摆幅
-    int  swingE  = (int)(2 * sx);                                 // 肘跟随摆幅
+    float s  = sinf(ph);                                          // -1~1，决定前后摆
 
-    // 侧身攀爬姿态（面朝右）：头抬高留脖子、躯干前倾、前臂前后摆
+    // 侧身攀爬姿态（面朝右）：头抬高留脖子、躯干前倾、手臂绕肩前后弧线摆（钟摆式）
     int hx  = _personX + (int)(2 * sx);                   // 头中心
     int hy  = gyMid - (int)(28 * scale);
     int n2x = _personX + (int)(4 * sx), n2y = gyMid - (int)(18 * scale);  // 脖子下端（肩）
     int t1x = _personX + (int)(4 * sx), t1y = gyMid - (int)(18 * scale);  // 躯干上端（肩）
     int t2x = _personX - (int)(2 * sx), t2y = gyMid - (int)(10 * scale);  // 躯干下端（髋）
-    int fa2x = _personX + (int)(12 * sx) + swingE, fa2y = gyMid - (int)(15 * scale);  // 前臂肘
-    int fahx = _personX + (int)(13 * sx) + swing,  fahy = gyMid - (int)(13 * scale);  // 前手
-    int ba2x = _personX - (int)(3 * sx) - swingE, ba2y = gyMid - (int)(14 * scale);   // 后臂肘
-    int bahx = _personX - (int)(8 * sx) - swing,  bahy = gyMid - (int)(11 * scale);   // 后手
+
+    // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
+    float L       = 10.0f * sx;            // 臂长
+    float SWING_A = 0.6f;                  // 摆动角幅度 (弧度) ≈ ±34°
+    float BASE_A  = 0.2f;                  // 自然下垂略前倾 (弧度)
+    int   sxj = t1x, syj = t1y;            // 肩
+    // 前臂角：BASE + SWING*sin；后臂角：-BASE - SWING*sin（反相 180°）
+    float aF = BASE_A + SWING_A * s;
+    int hfX = sxj + (int)(L * sinf(aF)), hfY = syj + (int)(L * cosf(aF));   // 前手（弧线位）
+    float aB = -BASE_A - SWING_A * s;
+    int hbX = sxj + (int)(L * sinf(aB)), hbY = syj + (int)(L * cosf(aB));   // 后手（弧线位）
+    // 肘：肩→手 50% 处（两段式，随弧线跟随）
+    int efX = sxj + (hfX - sxj) / 2, efY = syj + (hfY - syj) / 2;
+    int ebX = sxj + (hbX - sxj) / 2, ebY = syj + (hbY - syj) / 2;
+
+    // 腿（阶段2再做迈腿，先保持贴合坡面）
     int fk2x = _personX + (int)(4 * sx), fk2y = gyMid - (int)(4 * scale);   // 前腿膝
     int ffx  = _personX + (int)(7 * sx);                  // 前脚（高坡 gyR）
     int bk2x = _personX - (int)(5 * sx), bk2y = gyMid - (int)(4 * scale);   // 后腿膝
@@ -174,10 +184,10 @@ void MountainAnim::drawPerson()
     _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
     _canvas.drawLine(hx, gyMid - (int)(20 * scale), n2x, n2y, _person);       // 脖子（下巴→肩）
     _canvas.drawLine(t1x, t1y, t2x, t2y, _person);                            // 躯干（前倾）
-    _canvas.drawLine(t1x, t1y, fa2x + swingE * s, fa2y, _person);             // 前臂上段（肘随摆）
-    _canvas.drawLine(fa2x + swingE * s, fa2y, fahx + swing * s, fahy, _person); // 前臂下段→手（前后摆）
-    _canvas.drawLine(t1x, t1y, ba2x - swingE * s, ba2y, _person);             // 后臂上段（反相随摆）
-    _canvas.drawLine(ba2x - swingE * s, ba2y, bahx - swing * s, bahy, _person); // 后臂下段→手（反相）
+    _canvas.drawLine(sxj, syj, efX, efY, _person);                            // 前臂上段
+    _canvas.drawLine(efX, efY, hfX, hfY, _person);                            // 前臂下段→前手
+    _canvas.drawLine(sxj, syj, ebX, ebY, _person);                            // 后臂上段
+    _canvas.drawLine(ebX, ebY, hbX, hbY, _person);                            // 后臂下段→后手
     _canvas.drawLine(t2x, t2y, fk2x, fk2y, _person);                          // 前腿上段
     _canvas.drawLine(fk2x, fk2y, ffx, gyR, _person);                          // 前腿下段→脚（高坡）
     _canvas.drawLine(t2x, t2y, bk2x, bk2y, _person);                          // 后腿上段
