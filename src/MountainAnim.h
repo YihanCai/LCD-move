@@ -24,7 +24,7 @@ public:
               int x = 0, int y = 160,
               int w = 240, int h = 80);
 
-    // ② 每帧调用：自动爬坡（从山脚到山顶循环），并透明推屏
+    // ② 每帧调用：自动爬坡（从山脚到山顶），到顶后举手庆祝片刻再循环
     //    stepPx 控制每 tick 前进的像素数（速度），默认 2
     void tick(int stepPx = 2);
 
@@ -57,6 +57,10 @@ private:
 
     // 当前小人位置（局部坐标）
     int _personX = 100;
+
+    // 登顶庆祝状态：到终点后举起双手欢呼，停留片刻再循环
+    bool _celebrating = false;
+    int  _celebrateTicks = 0;
 
     // 山脊折线（局部坐标，运行时按 w/h 缩放后填充）
     static const int RIDGE_N = 11;

@@ -280,15 +280,30 @@ function drawMountain() {
 }
 
 // ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 摆臂 + 迈腿）----------
-function drawPerson(cx, gyL, gyR, color) {
+function drawPerson(cx, gyL, gyR, color, celebrate) {
   const gyMid = Math.floor((gyL + gyR) / 2);
-  // 摆臂/迈腿相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
   const ph = (cx - 20) / 24 * Math.PI * 2;   // 相位角 0~2π
   const s = Math.sin(ph);                    // -1~1，决定前后摆
 
   actx.strokeStyle = color;
   actx.fillStyle = color;
   actx.lineWidth = 2;
+
+  // —— 登顶庆祝：双手高举欢呼，身体挺直，双脚站定 ——
+  if (celebrate) {
+    actx.beginPath(); actx.arc(cx + 4, gyMid - 26, 7, 0, Math.PI*2); actx.fill();                        // 头
+    actx.beginPath(); actx.moveTo(cx + 4, gyMid - 19); actx.lineTo(cx + 2, gyMid - 17); actx.stroke();    // 脖子
+    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 17); actx.lineTo(cx - 1, gyMid - 9); actx.stroke();     // 躯干（挺直）
+    // 前臂高举（肩→肘→手向上）
+    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 17); actx.lineTo(cx + 6, gyMid - 25); actx.lineTo(cx + 9, gyMid - 33); actx.stroke();
+    // 后臂高举
+    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 17); actx.lineTo(cx - 3, gyMid - 25); actx.lineTo(cx - 6, gyMid - 33); actx.stroke();
+    // 双脚站定
+    actx.beginPath(); actx.moveTo(cx - 1, gyMid - 9); actx.lineTo(cx - 4, gyL); actx.stroke();
+    actx.beginPath(); actx.moveTo(cx - 1, gyMid - 9); actx.lineTo(cx + 4, gyR); actx.stroke();
+    return;
+  }
+
   actx.beginPath(); actx.arc(cx + 4, gyMid - 24, 7, 0, Math.PI*2); actx.fill();                        // 头（保持7px，略前探）
   actx.beginPath(); actx.moveTo(cx + 4, gyMid - 17); actx.lineTo(cx + 2, gyMid - 15); actx.stroke();    // 脖子（下巴→肩）
   actx.beginPath(); actx.moveTo(cx + 2, gyMid - 15); actx.lineTo(cx - 1, gyMid - 8); actx.stroke();     // 躯干（挺拔，微前倾：肩→髋）
@@ -350,14 +365,14 @@ function pushWithTransp() {
 
 // ---------- 渲染一帧 ----------
 // 对应 main.cpp 的 drawFrame()：清屏 → 画宿主区 → 画动画到离屏 → 透明按键推屏
-function drawFrame(personX) {
+function drawFrame(personX, celebrate) {
   ctx.clearRect(0, 0, W, SCR_H);
   drawHostArea();                          // ① 宿主区（整屏背景 + 上方 UI，动画不碰）
   drawMountain();                          // ② 山体画到离屏 anim
   if (show.person) {
     const gyL = Math.floor(groundAt(personX - 6));
     const gyR = Math.floor(groundAt(personX + 6));
-    drawPerson(personX, gyL, gyR, C.person);  // ③ 小人画到离屏 anim
+    drawPerson(personX, gyL, gyR, C.person, celebrate);  // ③ 小人画到离屏 anim（庆祝态）
     document.getElementById('roX').textContent = personX;
     document.getElementById('roGL').textContent = gyL;
     document.getElementById('roGR').textContent = gyR;
@@ -372,6 +387,9 @@ function drawFrame(personX) {
 // ============================================================
 let playing = true;
 let currentX = 100;
+let celebrating = false;        // 是否处于"登顶庆祝"状态
+let celebrateFrames = 0;        // 庆祝帧计数
+const CELEBRATE_FRAMES = 50;    // 庆祝时长（约 50 帧 ≈ 1.7s）
 const slider = document.getElementById('personX');
 const speedSlider = document.getElementById('speed');
 let lastT = 0;
@@ -382,15 +400,28 @@ function tick(ts) {
   const dt = ts - lastT;
   lastT = ts;
   if (playing) {
-    currentX += dt / msPerPx(parseInt(speedSlider.value, 10));
-    if (currentX > 205) currentX = 20;
+    if (celebrating) {
+      // 庆祝阶段：停在 205，计数结束后回到山脚
+      celebrateFrames++;
+      if (celebrateFrames >= CELEBRATE_FRAMES) {
+        celebrating = false;
+        currentX = 20;
+      }
+    } else {
+      currentX += dt / msPerPx(parseInt(speedSlider.value, 10));
+      if (currentX >= 205) {       // 到达山顶 → 进入庆祝
+        currentX = 205;
+        celebrating = true;
+        celebrateFrames = 0;
+      }
+    }
     slider.value = Math.round(currentX);
-    drawFrame(Math.round(currentX));
+    drawFrame(Math.round(currentX), celebrating);
   }
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
-drawFrame(currentX);
+drawFrame(currentX, false);
 
 // ---------- 控件事件 ----------
 document.getElementById('btnPlay').addEventListener('click', e => {

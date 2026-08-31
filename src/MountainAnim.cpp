@@ -150,6 +150,27 @@ void MountainAnim::drawPerson()
     int hr = (int)(7 * scale);
     if (hr < 2) hr = 2;
 
+    // —— 登顶庆祝：双手高举欢呼，身体挺直，双脚站定 ——
+    if (_celebrating) {
+        int hx = _personX + (int)(4 * sx), hy = gyMid - (int)(26 * scale);
+        int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(17 * scale);
+        int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(9 * scale);
+        int ehx1 = _personX + (int)(6 * sx), ehy1 = gyMid - (int)(25 * scale);  // 前臂肘
+        int hhx1 = _personX + (int)(9 * sx), hhy1 = gyMid - (int)(33 * scale);  // 前手
+        int ehx2 = _personX - (int)(3 * sx), ehy2 = gyMid - (int)(25 * scale);  // 后臂肘
+        int hhx2 = _personX - (int)(6 * sx), hhy2 = gyMid - (int)(33 * scale);  // 后手
+        _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
+        _canvas.drawLine(hx, gyMid - (int)(19 * scale), n2x, n2y, _person);       // 脖子
+        _canvas.drawLine(n2x, n2y, t2x, t2y, _person);                            // 躯干（挺直）
+        _canvas.drawLine(n2x, n2y, ehx1, ehy1, _person);                          // 前臂上段
+        _canvas.drawLine(ehx1, ehy1, hhx1, hhy1, _person);                        // 前臂下段→前手
+        _canvas.drawLine(n2x, n2y, ehx2, ehy2, _person);                          // 后臂上段
+        _canvas.drawLine(ehx2, ehy2, hhx2, hhy2, _person);                        // 后臂下段→后手
+        _canvas.drawLine(t2x, t2y, _personX - (int)(4 * sx), gyL, _person);       // 左腿（站定）
+        _canvas.drawLine(t2x, t2y, _personX + (int)(4 * sx), gyR, _person);       // 右腿（站定）
+        return;
+    }
+
     // 摆臂相位：随移动距离推进（每走 24px 完成一个周期），停止即静止
     float ph = (float)(_personX - _minX) / 24.0f * 6.2831853f;   // 0~2π
     float s  = sinf(ph);                                          // -1~1，决定前后摆
@@ -204,11 +225,24 @@ void MountainAnim::drawPerson()
     _canvas.drawLine(rKneeX, rKneeY, rFootX, rFootY, _person);                // 右腿下段→脚
 }
 
-// ---- 自动爬坡：每 tick 前进 stepPx，到终点后循环 ----
+// ---- 自动爬坡：每 tick 前进 stepPx，到山顶后庆祝片刻再循环 ----
 void MountainAnim::tick(int stepPx)
 {
-    _personX += stepPx;
-    if (_personX > _maxX) _personX = _minX;   // 到山顶后回到山脚
+    if (_celebrating) {
+        _celebrateTicks++;
+        if (_celebrateTicks >= 50) {          // 庆祝约 50 帧（≈1.7s）
+            _celebrating = false;
+            _celebrateTicks = 0;
+            _personX = _minX;                 // 回到山脚重新爬
+        }
+    } else {
+        _personX += stepPx;
+        if (_personX >= _maxX) {              // 到达山顶 → 进入庆祝
+            _personX = _maxX;
+            _celebrating = true;
+            _celebrateTicks = 0;
+        }
+    }
     drawFrame(_personX);
 }
 
