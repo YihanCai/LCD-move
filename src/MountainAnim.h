@@ -73,7 +73,7 @@ private:
     static const int CRACKS[6][4];
 
     // 颜色
-    static const uint16_t _mountain, _snow, _crack, _ridgeColor, _person, _transp;
+    static const uint16_t _mountain, _snow, _crack, _ridgeColor, _person, _cape, _transp;
     static const uint16_t _rock[6];
 
     // 内部绘制

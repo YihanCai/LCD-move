@@ -141,6 +141,7 @@ const C = {
   crack:     '#1E4A2E',  // 岩石裂缝
   ridge:     '#FFFFFF',  // 山脊受光棱线
   person:    '#E53935',  // 红色小人（登山服，任何背景都醒目）
+  cape:      '#1565C0',  // 披风（深蓝，拖在身后）
   guide:     '#FF00FF',  // 坡道参考线（调试用，默认关）
 };
 
@@ -279,14 +280,24 @@ function drawMountain() {
   }
 }
 
-// ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 摆臂 + 迈腿）----------
+// ---------- 画小人（画到离屏 anim，局部坐标；侧身 + 摆臂 + 迈腿 + 披风）----------
 function drawPerson(cx, gyL, gyR, color, celebrate) {
   const gyMid = Math.floor((gyL + gyR) / 2);
   const ph = (cx - 20) / 24 * Math.PI * 2;   // 相位角 0~2π
   const s = Math.sin(ph);                    // -1~1，决定前后摆
 
+  // —— 披风（画在身体后面）：锚在脖子后，向后下方展开，随错相位飘动 ——
+  const capeFlap = Math.sin(ph + 0.9) * 3;   // 与摆臂错开 ~0.9 相位，自然飘动
+  actx.fillStyle = C.cape;
+  actx.beginPath();
+  actx.moveTo(cx + 2, gyMid - 16);                             // 锚点（脖子后）
+  actx.lineTo(cx - 9 + capeFlap, gyMid - 10 + capeFlap * 0.4); // 后上角
+  actx.lineTo(cx - 7 + capeFlap, gyMid - 3 + capeFlap * 0.6);  // 后下角
+  actx.closePath();
+  actx.fill();
   actx.strokeStyle = color;
   actx.fillStyle = color;
+
   actx.lineWidth = 2;
 
   // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——

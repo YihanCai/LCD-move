@@ -14,6 +14,7 @@ const uint16_t MountainAnim::_snow       = 0xF7BE;   // #F2F7F4 雪帽
 const uint16_t MountainAnim::_crack      = 0x1A45;   // #1E4A2E 岩石裂缝
 const uint16_t MountainAnim::_ridgeColor = 0xFFFF;   // 山脊受光棱线
 const uint16_t MountainAnim::_person     = 0xE1C6;   // #E53935 红色小人
+const uint16_t MountainAnim::_cape       = 0x1338;   // #1565C0 披风（深蓝）
 const uint16_t MountainAnim::_transp     = 0x0000;   // 透明打底色（黑），画面内不出现
 
 // ---- 岩层向下延展量 ----
@@ -149,6 +150,15 @@ void MountainAnim::drawPerson()
     // 基准尺寸（高 80 时）：头半径 7、头中心 gyMid-24、身 gyMid-15~-8
     int hr = (int)(7 * scale);
     if (hr < 2) hr = 2;
+
+    // —— 披风（画在身体后面）：锚在脖子后，向后下方展开，随错相位飘动 ——
+    float capePh = (float)(_personX - _minX) / 24.0f * 6.2831853f + 0.9f;   // 与摆臂错开 ~0.9 相位
+    int   capeFlap = (int)(sinf(capePh) * 3 * sx);                          // 飘动幅度（横向）
+    _canvas.fillTriangle(
+        _personX + (int)(2 * sx),                          gyMid - (int)(16 * scale),          // 锚点（脖子后）
+        _personX - (int)(9 * sx) + capeFlap,               gyMid - (int)(10 * scale) + (int)(capeFlap * 0.4),   // 后上角
+        _personX - (int)(7 * sx) + capeFlap,               gyMid - (int)(3 * scale) + (int)(capeFlap * 0.6),    // 后下角
+        _cape);
 
     // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——
     if (_celebrating) {
