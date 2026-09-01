@@ -150,22 +150,27 @@ void MountainAnim::drawPerson()
     int hr = (int)(7 * scale);
     if (hr < 2) hr = 2;
 
-    // —— 登顶庆祝：双手高举欢呼，身体挺直，双脚站定 ——
+    // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——
     if (_celebrating) {
         int hx = _personX + (int)(4 * sx), hy = gyMid - (int)(26 * scale);
         int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(17 * scale);
         int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(9 * scale);
-        int ehx1 = _personX + (int)(6 * sx), ehy1 = gyMid - (int)(25 * scale);  // 前臂肘
-        int hhx1 = _personX + (int)(9 * sx), hhy1 = gyMid - (int)(33 * scale);  // 前手
-        int ehx2 = _personX - (int)(3 * sx), ehy2 = gyMid - (int)(25 * scale);  // 后臂肘
-        int hhx2 = _personX - (int)(6 * sx), hhy2 = gyMid - (int)(33 * scale);  // 后手
+        // 右手高举握拳：上臂→前臂→拳头小圆（抬到头顶上方 gyMid-35，半径2，不重叠头）
+        int fu1x = _personX + (int)(7 * sx), fu1y = gyMid - (int)(27 * scale);   // 上臂肘
+        int fu2x = _personX + (int)(8 * sx), fu2y = gyMid - (int)(35 * scale);   // 前臂末端（拳头中心）
+        int fistR = (int)(2 * scale);                                             // 拳头半径
+        if (fistR < 1) fistR = 1;
+        // 左手自然下垂（两段）
+        int dl1x = _personX - (int)(3 * sx), dl1y = gyMid - (int)(15 * scale);   // 左上臂
+        int dl2x = _personX - (int)(4 * sx), dl2y = gyMid - (int)(12 * scale);   // 左前臂
         _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
         _canvas.drawLine(hx, gyMid - (int)(19 * scale), n2x, n2y, _person);       // 脖子
         _canvas.drawLine(n2x, n2y, t2x, t2y, _person);                            // 躯干（挺直）
-        _canvas.drawLine(n2x, n2y, ehx1, ehy1, _person);                          // 前臂上段
-        _canvas.drawLine(ehx1, ehy1, hhx1, hhy1, _person);                        // 前臂下段→前手
-        _canvas.drawLine(n2x, n2y, ehx2, ehy2, _person);                          // 后臂上段
-        _canvas.drawLine(ehx2, ehy2, hhx2, hhy2, _person);                        // 后臂下段→后手
+        _canvas.drawLine(n2x, n2y, fu1x, fu1y, _person);                          // 右上臂
+        _canvas.drawLine(fu1x, fu1y, fu2x, fu2y, _person);                        // 右前臂
+        _canvas.fillCircle(fu2x, fu2y, fistR, _person);                           // 握拳（头顶上方）
+        _canvas.drawLine(n2x, n2y, dl1x, dl1y, _person);                          // 左上臂
+        _canvas.drawLine(dl1x, dl1y, dl2x, dl2y, _person);                        // 左前臂
         _canvas.drawLine(t2x, t2y, _personX - (int)(4 * sx), gyL, _person);       // 左腿（站定）
         _canvas.drawLine(t2x, t2y, _personX + (int)(4 * sx), gyR, _person);       // 右腿（站定）
         return;
