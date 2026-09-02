@@ -162,20 +162,20 @@ void MountainAnim::drawPerson()
 
     // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——
     if (_celebrating) {
-        int hx = _personX + (int)(4 * sx), hy = gyMid - (int)(26 * scale);
-        int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(17 * scale);
-        int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(9 * scale);
-        // 右手高举握拳：上臂→前臂→拳头小圆（抬到头顶上方 gyMid-35，半径2，不重叠头）
-        int fu1x = _personX + (int)(7 * sx), fu1y = gyMid - (int)(27 * scale);   // 上臂肘
-        int fu2x = _personX + (int)(8 * sx), fu2y = gyMid - (int)(35 * scale);   // 前臂末端（拳头中心）
-        int fistR = (int)(2 * scale);                                             // 拳头半径
+        int hx = _personX + (int)(2 * sx), hy = gyMid - (int)(20 * scale);
+        int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(13 * scale);
+        int t2x = _personX + (int)(1 * sx), t2y = gyMid - (int)(7 * scale);
+        // 右手高举握拳：上臂→前臂→拳头小圆（抬到头顶上方，半径1.5，不重叠头）
+        int fu1x = _personX + (int)(7 * sx), fu1y = gyMid - (int)(20 * scale);   // 上臂肘
+        int fu2x = _personX + (int)(8 * sx), fu2y = gyMid - (int)(26 * scale);   // 前臂末端（拳头中心）
+        int fistR = (int)(1.5f * scale);                                          // 拳头半径
         if (fistR < 1) fistR = 1;
         // 左手自然下垂（两段）
-        int dl1x = _personX - (int)(3 * sx), dl1y = gyMid - (int)(15 * scale);   // 左上臂
-        int dl2x = _personX - (int)(4 * sx), dl2y = gyMid - (int)(12 * scale);   // 左前臂
+        int dl1x = _personX - (int)(3 * sx), dl1y = gyMid - (int)(11 * scale);   // 左上臂
+        int dl2x = _personX - (int)(4 * sx), dl2y = gyMid - (int)(9 * scale);    // 左前臂
         _canvas.fillCircle(hx, hy, hr, _person);                                  // 头
-        _canvas.drawLine(hx, gyMid - (int)(19 * scale), n2x, n2y, _person);       // 脖子
-        _canvas.drawLine(n2x, n2y, t2x, t2y, _person);                            // 躯干（挺直）
+        _canvas.drawLine(hx, gyMid - (int)(15 * scale), n2x, n2y, _person);       // 脖子（竖直）
+        _canvas.drawLine(n2x, n2y, t2x, t2y, _person);                            // 躯干（竖直挺直）
         _canvas.drawLine(n2x, n2y, fu1x, fu1y, _person);                          // 右上臂
         _canvas.drawLine(fu1x, fu1y, fu2x, fu2y, _person);                        // 右前臂
         _canvas.fillCircle(fu2x, fu2y, fistR, _person);                           // 握拳（头顶上方）
@@ -190,12 +190,12 @@ void MountainAnim::drawPerson()
     float ph = (float)(_personX - _minX) / 24.0f * 6.2831853f;   // 0~2π
     float s  = sinf(ph);                                          // -1~1，决定前后摆
 
-    // 侧身攀爬姿态（面朝右）：头略前探、躯干挺拔微前倾、手臂绕肩前后弧线摆（钟摆式）、双腿跨步交替
-    int hx  = _personX + (int)(4 * sx);                   // 头中心（略前探）
+    // 侧身攀爬姿态（面朝右）：头与肩对齐、躯干竖直微前倾、手臂绕肩前后弧线摆（钟摆式）、双腿跨步交替
+    int hx  = _personX + (int)(2 * sx);                   // 头中心（与肩对齐，不再前探）
     int hy  = gyMid - (int)(24 * scale);
     int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(15 * scale);  // 脖子下端（肩）
     int t1x = _personX + (int)(2 * sx), t1y = gyMid - (int)(15 * scale);  // 躯干上端（肩）
-    int t2x = _personX - (int)(1 * sx), t2y = gyMid - (int)(8 * scale);   // 躯干下端（髋）
+    int t2x = _personX + (int)(1 * sx), t2y = gyMid - (int)(8 * scale);   // 躯干下端（髋）
 
     // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
     float L       = 9.0f * sx;             // 臂长（缩小）
