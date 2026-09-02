@@ -73,8 +73,8 @@ MountainAnim anim;        // 爬坡动画模块
 static void drawHostSim()
 {
     // 0) 宿主背景：铺满整屏（含动画区下方的底色，供透明区透出）
-    tft.fillRect(0, 0,      240, 160, 0x2125);   // 上方宿主背景（深灰蓝）
-    tft.fillRect(0, 160,    240, 80, 0x29A8);    // 动画区下方的宿主底色
+    tft.fillRect(0, 0,      240, 180, 0x2125);   // 上方宿主背景（深灰蓝，到 y=180）
+    tft.fillRect(0, 180,    240, 60, 0x29A8);    // 动画区下方的宿主底色
 
     // 1) 顶部标题栏
     tft.fillRect(0, 0, 240, 22, 0x4D1F);
@@ -96,14 +96,14 @@ static void drawHostSim()
     // 3) 说明文字（宿主区）
     tft.setTextColor(0x9D37);
     tft.setCursor(14, 104);
-    tft.print("host area: upper 2/3");
+    tft.print("host area: upper 3/4");
     tft.setCursor(14, 120);
     tft.print("animation must NOT touch");
     tft.setCursor(14, 136);
-    tft.print("boundary y=160 below");
+    tft.print("boundary y=180 below");
 
     // 4) 分界线
-    tft.drawFastHLine(0, 159, 240, 0x6BB0);
+    tft.drawFastHLine(0, 179, 240, 0x6BB0);
 }
 
 void setup()
@@ -116,7 +116,7 @@ void setup()
     tft.setRotation(0);     // 0-3：根据安装方向调整
     tft.setBrightness(255); // 点亮背光
 
-    anim.init(&tft);        // 初始化动画模块（默认屏幕下方 1/3）
+    anim.init(&tft, 0, 180, 240, 60);   // 动画区：屏幕下方 1/4（y 180~240，高 60）
 }
 
 void loop()
