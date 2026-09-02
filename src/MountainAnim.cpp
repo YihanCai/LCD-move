@@ -160,10 +160,10 @@ void MountainAnim::drawPerson()
         _personX - (int)(7 * sx) + capeFlap,               gyMid - (int)(3 * scale) + (int)(capeFlap * 0.6),    // 后下角
         _cape);
 
-    // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——
+    // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体微前倾，双脚站定 ——
     if (_celebrating) {
-        int hx = _personX + (int)(2 * sx), hy = gyMid - (int)(20 * scale);
-        int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(13 * scale);
+        int hx = _personX + (int)(3 * sx), hy = gyMid - (int)(20 * scale);   // 头（轻微前倾）
+        int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(13 * scale); // 脖子下端（肩）
         int t2x = _personX + (int)(1 * sx), t2y = gyMid - (int)(7 * scale);
         // 右手高举握拳：上臂→前臂→拳头小圆（抬到头顶上方，半径1.5，不重叠头）
         int fu1x = _personX + (int)(7 * sx), fu1y = gyMid - (int)(20 * scale);   // 上臂肘
@@ -191,7 +191,7 @@ void MountainAnim::drawPerson()
     float s  = sinf(ph);                                          // -1~1，决定前后摆
 
     // 侧身攀爬姿态（面朝右）：头与肩对齐、躯干竖直微前倾、手臂绕肩前后弧线摆（钟摆式）、双腿跨步交替
-    int hx  = _personX + (int)(2 * sx);                   // 头中心（与肩对齐，不再前探）
+    int hx  = _personX + (int)(3 * sx);                   // 头中心（轻微前倾，与身体同一弧线）
     int hy  = gyMid - (int)(24 * scale);
     int n2x = _personX + (int)(2 * sx), n2y = gyMid - (int)(15 * scale);  // 脖子下端（肩）
     int t1x = _personX + (int)(2 * sx), t1y = gyMid - (int)(15 * scale);  // 躯干上端（肩）

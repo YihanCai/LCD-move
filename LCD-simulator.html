@@ -304,9 +304,9 @@ function drawPerson(cx, gyL, gyR, color, celebrate) {
 
   // —— 登顶庆祝：右手高举握拳（拳头在头顶上方），左手自然下垂，身体挺直，双脚站定 ——
   if (celebrate) {
-    actx.beginPath(); actx.arc(cx + 2, gyMid - 20, 5, 0, Math.PI*2); actx.fill();                        // 头（与肩对齐）
-    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 15); actx.lineTo(cx + 2, gyMid - 13); actx.stroke();    // 脖子（竖直）
-    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 13); actx.lineTo(cx + 1, gyMid - 7); actx.stroke();     // 躯干（竖直挺直）
+    actx.beginPath(); actx.arc(cx + 3, gyMid - 20, 5, 0, Math.PI*2); actx.fill();                        // 头（轻微前倾）
+    actx.beginPath(); actx.moveTo(cx + 3, gyMid - 15); actx.lineTo(cx + 2, gyMid - 13); actx.stroke();    // 脖子（随前倾微斜）
+    actx.beginPath(); actx.moveTo(cx + 2, gyMid - 13); actx.lineTo(cx + 1, gyMid - 7); actx.stroke();     // 躯干（微前倾挺直）
     // 右手高举握拳：上臂→前臂→拳头小圆（抬到头顶上方，半径1.5，不重叠头）
     actx.beginPath(); actx.moveTo(cx + 2, gyMid - 13); actx.lineTo(cx + 7, gyMid - 20); actx.stroke();    // 上臂
     actx.beginPath(); actx.moveTo(cx + 7, gyMid - 20); actx.lineTo(cx + 8, gyMid - 26); actx.stroke();    // 前臂
@@ -320,9 +320,9 @@ function drawPerson(cx, gyL, gyR, color, celebrate) {
     return;
   }
 
-  actx.beginPath(); actx.arc(cx + 2, gyMid - 18, 5, 0, Math.PI*2); actx.fill();                        // 头（与肩对齐，不再前探）
-  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 13); actx.lineTo(cx + 2, gyMid - 11); actx.stroke();    // 脖子（竖直）
-  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 11); actx.lineTo(cx + 1, gyMid - 6); actx.stroke();     // 躯干（竖直，微前倾：肩→髋）
+  actx.beginPath(); actx.arc(cx + 3, gyMid - 18, 5, 0, Math.PI*2); actx.fill();                        // 头（轻微前倾）
+  actx.beginPath(); actx.moveTo(cx + 3, gyMid - 13); actx.lineTo(cx + 2, gyMid - 11); actx.stroke();    // 脖子（随前倾微斜）
+  actx.beginPath(); actx.moveTo(cx + 2, gyMid - 11); actx.lineTo(cx + 1, gyMid - 6); actx.stroke();     // 躯干（微前倾）
 
   // —— 前后摆臂：手绕肩做钟摆式弧线摆动（不是水平平移）——
   const L = 9;                     // 臂长 (px，横向，不变)
