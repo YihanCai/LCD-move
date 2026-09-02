@@ -84,6 +84,15 @@ void MountainAnim::drawScene()
     // 0) 整张动画画布先填透明色
     _canvas.fillRect(0, 0, _w, _h, _transp);
 
+    // 0.5) 星星（太空背景：画在山体以上的"天空"区，固定位置不漂移）
+    //      确定性公式生成（与模拟器一致）；山体画在之后会盖住下方的星
+    for (int i = 0; i < 30; i++) {
+        int sx = (i * 37 + 11) % 240;   // 星星 x（0~239）
+        int sy = (i * 23 + 5) % 26;     // 星星 y（0~25，都在山体最高点之上）
+        int sz = (i % 6 == 0) ? 2 : 1;  // 少部分大星（2px），其余小星（1px）
+        _canvas.fillRect(sx, sy, sz, sz, 0xFFFF);   // 白色
+    }
+
     // 1) 山体主轮廓（沿折线山脊 → 每段向下填到底边闭合）
     for (int i = 0; i < RIDGE_N - 1; i++) {
         int x1 = _ridge[i][0],   y1 = _ridge[i][1];

@@ -86,6 +86,7 @@
         <button id="tgCrack" class="active">裂缝</button>
         <button id="tgPerson" class="active">小人</button>
         <button id="tgRidge" class="active">山脊线</button>
+        <button id="tgStars" class="active">星星</button>
       </div>
     </div>
 
@@ -149,7 +150,7 @@ const C = {
 // ---------- 显示开关 ----------
 const show = {
   host: true, mountain: true, rock: true, snow: true,
-  crack: true, person: true, ridge: true, guide: false,
+  crack: true, person: true, ridge: true, stars: true, guide: false,
 };
 
 // ---------- 沿山脊折线插值：给定 x 求坡面高度 y（局部坐标）----------
@@ -206,6 +207,18 @@ function drawHostArea() {
 function drawMountain() {
   // 0) 整张动画画布先填透明色（替代原来动画自带的天空）
   actx.fillStyle = TRANSP; actx.fillRect(0, 0, W, ANIM_H);
+
+  // 0.5) 星星（太空背景：画在山体以上的"天空"区，固定位置不漂移）
+  //      确定性公式生成（模拟器与固件一致）；山体画在之后会盖住下方的星
+  if (show.stars) {
+    actx.fillStyle = '#FFFFFF';
+    for (let i = 0; i < 30; i++) {
+      const sx = (i * 37 + 11) % 240;   // 星星 x（0~239）
+      const sy = (i * 23 + 5) % 26;     // 星星 y（0~25，都在山体最高点之上）
+      const sz = (i % 6 === 0) ? 2 : 1; // 少部分大星（2px），其余小星（1px）
+      actx.fillRect(sx, sy, sz, sz);
+    }
+  }
 
   // 1) 山体主轮廓（沿折线山脊 → 底部 y=60 闭合）
   if (show.mountain) {
@@ -460,7 +473,7 @@ speedSlider.addEventListener('input', () => {
 });
 const tgMap = {
   tgHost:'host', tgMountain:'mountain', tgRock:'rock', tgSnow:'snow',
-  tgCrack:'crack', tgPerson:'person', tgRidge:'ridge',
+  tgCrack:'crack', tgPerson:'person', tgRidge:'ridge', tgStars:'stars',
 };
 for (const [id, key] of Object.entries(tgMap)) {
   document.getElementById(id).addEventListener('click', e => {
