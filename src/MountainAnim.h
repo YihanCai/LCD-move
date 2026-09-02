@@ -62,6 +62,9 @@ private:
     bool _celebrating = false;
     int  _celebrateTicks = 0;
 
+    // 帧计数（极光流动相位推进）
+    int _frame = 0;
+
     // 山脊折线（局部坐标，运行时按 w/h 缩放后填充）
     static const int RIDGE_N = 11;
     int _ridge[RIDGE_N][2];

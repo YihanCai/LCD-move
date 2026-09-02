@@ -87,6 +87,7 @@
         <button id="tgPerson" class="active">小人</button>
         <button id="tgRidge" class="active">山脊线</button>
         <button id="tgStars" class="active">星星</button>
+        <button id="tgAurora" class="active">极光</button>
       </div>
     </div>
 
@@ -150,7 +151,7 @@ const C = {
 // ---------- 显示开关 ----------
 const show = {
   host: true, mountain: true, rock: true, snow: true,
-  crack: true, person: true, ridge: true, stars: true, guide: false,
+  crack: true, person: true, ridge: true, stars: true, aurora: true, guide: false,
 };
 
 // ---------- 沿山脊折线插值：给定 x 求坡面高度 y（局部坐标）----------
@@ -208,7 +209,29 @@ function drawMountain() {
   // 0) 整张动画画布先填透明色（替代原来动画自带的天空）
   actx.fillStyle = TRANSP; actx.fillRect(0, 0, W, ANIM_H);
 
-  // 0.5) 星星（太空背景：画在山体以上的"天空"区，固定位置不漂移）
+  // 0.5) 极光（太空背景：天空区底层的绿色波浪光带，随相位流动）
+  //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光只显现在天空
+  if (show.aurora) {
+    const au = (frameCount * 0.06);              // 极光流动相位（随时间推进）
+    const layers = [
+      { base: 21, amp: 3, freq: 0.035, off: 0.0,  thick: 5, color: '#1B5E20' },
+      { base: 15, amp: 3, freq: 0.045, off: 1.3,  thick: 5, color: '#43A047' },
+      { base:  9, amp: 2.5, freq: 0.055, off: 2.6, thick: 4, color: '#A5D6A7' },
+    ];
+    layers.forEach(L => {
+      const yTop = x => L.base + L.amp * Math.sin(L.freq * x + au + L.off);
+      actx.fillStyle = L.color;
+      actx.beginPath();
+      actx.moveTo(0, yTop(0));
+      for (let x = 4; x <= W; x += 4) actx.lineTo(x, yTop(x));
+      actx.lineTo(W, yTop(W) + L.thick);
+      actx.lineTo(0, yTop(0) + L.thick);
+      actx.closePath();
+      actx.fill();
+    });
+  }
+
+  // 0.6) 星星（太空背景：画在极光之上、山体以上的"天空"区，固定位置不漂移）
   //      确定性公式生成（模拟器与固件一致）；山体画在之后会盖住下方的星
   if (show.stars) {
     actx.fillStyle = '#FFFFFF';
@@ -416,6 +439,7 @@ function drawFrame(personX, celebrate) {
 // ============================================================
 let playing = true;
 let currentX = 100;
+let frameCount = 0;                 // 帧计数（极光流动用，随时间推进）
 let celebrating = false;        // 是否处于"登顶庆祝"状态
 let celebrateFrames = 0;        // 庆祝帧计数
 const CELEBRATE_FRAMES = 50;    // 庆祝时长（约 50 帧 ≈ 1.7s）
@@ -446,6 +470,7 @@ function tick(ts) {
     }
     slider.value = Math.round(currentX);
     drawFrame(Math.round(currentX), celebrating);
+    frameCount++;   // 极光流动相位推进
   }
   requestAnimationFrame(tick);
 }
@@ -473,7 +498,7 @@ speedSlider.addEventListener('input', () => {
 });
 const tgMap = {
   tgHost:'host', tgMountain:'mountain', tgRock:'rock', tgSnow:'snow',
-  tgCrack:'crack', tgPerson:'person', tgRidge:'ridge', tgStars:'stars',
+  tgCrack:'crack', tgPerson:'person', tgRidge:'ridge', tgStars:'stars', tgAurora:'aurora',
 };
 for (const [id, key] of Object.entries(tgMap)) {
   document.getElementById(id).addEventListener('click', e => {

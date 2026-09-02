@@ -84,7 +84,32 @@ void MountainAnim::drawScene()
     // 0) 整张动画画布先填透明色
     _canvas.fillRect(0, 0, _w, _h, _transp);
 
-    // 0.5) 星星（太空背景：画在山体以上的"天空"区，固定位置不漂移）
+    // 0.5) 极光（太空背景：天空区底层的绿色波浪光带，随相位流动）
+    //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光只在天空显现
+    {
+        float au = _frame * 0.06f;                    // 极光流动相位（随时间推进）
+        const float BASE[3]  = { 21.0f, 15.0f, 9.0f };
+        const float AMP[3]   = { 3.0f,  3.0f,  2.5f };
+        const float FREQ[3]  = { 0.035f, 0.045f, 0.055f };
+        const float OFF[3]   = { 0.0f, 1.3f, 2.6f };
+        const int   THICK[3] = { 5, 5, 4 };
+        const uint16_t A_COLOR[3] = { 0x1AE4, 0x4508, 0xA6B4 };  // 深绿→中绿→亮绿
+        for (int li = 0; li < 3; li++) {
+            // 逐段梯形（两个三角形）近似波浪带：沿 x 每隔 4px 采样上缘，下缘 = 上缘 + THICK
+            for (int x = 0; x < _w; x += 4) {
+                int x1 = x, x2 = x + 4;
+                float f = au + OFF[li];
+                float y1 = BASE[li] + AMP[li] * sinf(FREQ[li] * x1 + f);
+                float y2 = BASE[li] + AMP[li] * sinf(FREQ[li] * x2 + f);
+                int y1a = (int)y1, y1b = (int)y2;
+                int y2a = y1a + THICK[li], y2b = y1b + THICK[li];
+                _canvas.fillTriangle(x1, y1a, x2, y1b, x2, y2b, A_COLOR[li]);
+                _canvas.fillTriangle(x1, y1a, x2, y2b, x1, y2a, A_COLOR[li]);
+            }
+        }
+    }
+
+    // 0.6) 星星（太空背景：画在极光之上、山体以上的"天空"区，固定位置不漂移）
     //      确定性公式生成（与模拟器一致）；山体画在之后会盖住下方的星
     for (int i = 0; i < 30; i++) {
         int sx = (i * 37 + 11) % 240;   // 星星 x（0~239）
@@ -252,6 +277,7 @@ void MountainAnim::drawPerson()
 // ---- 自动爬坡：每 tick 前进 stepPx，到山顶后庆祝片刻再循环 ----
 void MountainAnim::tick(int stepPx)
 {
+    _frame++;   // 帧计数（极光流动相位推进）
     if (_celebrating) {
         _celebrateTicks++;
         if (_celebrateTicks >= 50) {          // 庆祝约 50 帧（≈1.7s）
