@@ -84,15 +84,15 @@ void MountainAnim::drawScene()
     // 0) 整张动画画布先填透明色
     _canvas.fillRect(0, 0, _w, _h, _transp);
 
-    // 0.5) 极光（太空背景：天空区底层的绿色波浪光带，随相位流动）
-    //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光只在天空显现
+    // 0.5) 极光（太空背景：集中在接近山顶的位置，3 层波浪光带，随相位流动）
+    //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光垂在山顶上
     {
         float au = _frame * 0.06f;                    // 极光流动相位（随时间推进）
-        const float BASE[3]  = { 21.0f, 15.0f, 9.0f };
-        const float AMP[3]   = { 3.0f,  3.0f,  2.5f };
-        const float FREQ[3]  = { 0.035f, 0.045f, 0.055f };
-        const float OFF[3]   = { 0.0f, 1.3f, 2.6f };
-        const int   THICK[3] = { 5, 5, 4 };
+        const float BASE[3]  = { 26.0f, 24.0f, 22.0f };   // 贴近山顶（山顶平台局部 y=29）
+        const float AMP[3]   = { 2.0f,  2.0f,  1.6f };
+        const float FREQ[3]  = { 0.030f, 0.040f, 0.050f };
+        const float OFF[3]   = { 0.0f, 1.2f, 2.4f };
+        const int   THICK[3] = { 3, 3, 2 };                 // 减薄：收窄成山顶上一条光带
         const uint16_t A_COLOR[3] = { 0x1AE4, 0x4508, 0xA6B4 };  // 深绿→中绿→亮绿
         for (int li = 0; li < 3; li++) {
             // 逐段梯形（两个三角形）近似波浪带：沿 x 每隔 4px 采样上缘，下缘 = 上缘 + THICK

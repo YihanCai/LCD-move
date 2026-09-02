@@ -209,14 +209,14 @@ function drawMountain() {
   // 0) 整张动画画布先填透明色（替代原来动画自带的天空）
   actx.fillStyle = TRANSP; actx.fillRect(0, 0, W, ANIM_H);
 
-  // 0.5) 极光（太空背景：天空区底层的绿色波浪光带，随相位流动）
-  //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光只显现在天空
+  // 0.5) 极光（太空背景：集中在接近山顶的位置，3 层波浪光带，随相位流动）
+  //      3 层深浅绿堆叠成"光幕"；山体画在之后会盖住下方，极光垂在山顶上
   if (show.aurora) {
     const au = (frameCount * 0.06);              // 极光流动相位（随时间推进）
     const layers = [
-      { base: 21, amp: 3, freq: 0.035, off: 0.0,  thick: 5, color: '#1B5E20' },
-      { base: 15, amp: 3, freq: 0.045, off: 1.3,  thick: 5, color: '#43A047' },
-      { base:  9, amp: 2.5, freq: 0.055, off: 2.6, thick: 4, color: '#A5D6A7' },
+      { base: 26, amp: 2,   freq: 0.030, off: 0.0,  thick: 3, color: '#1B5E20' },
+      { base: 24, amp: 2,   freq: 0.040, off: 1.2,  thick: 3, color: '#43A047' },
+      { base: 22, amp: 1.6, freq: 0.050, off: 2.4,  thick: 2.5, color: '#A5D6A7' },
     ];
     layers.forEach(L => {
       const yTop = x => L.base + L.amp * Math.sin(L.freq * x + au + L.off);
