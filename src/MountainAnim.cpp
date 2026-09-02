@@ -87,13 +87,13 @@ void MountainAnim::drawScene()
     // 0.5) 极光（太空背景：悬在山顶上方天空，不贴山顶，3 层波浪光带，随相位流动）
     //      山顶平台局部 y=29（y 向下增大），极光用更小的 y（上方）→ 悬在山顶之上
     {
-        float au = _frame * 0.06f;                    // 极光流动相位（随时间推进）
+        float au = _frame * 0.03f;                    // 极光流动相位（慢速流动）
         const float BASE[3]  = { 22.0f, 20.0f, 18.0f };   // 悬在山顶平台（局部 y=29）上方
         const float AMP[3]   = { 2.0f,  2.0f,  1.6f };
         const float FREQ[3]  = { 0.030f, 0.040f, 0.050f };
         const float OFF[3]   = { 0.0f, 1.2f, 2.4f };
         const int   THICK[3] = { 3, 3, 2 };                 // 收窄成一条光带
-        const uint16_t A_COLOR[3] = { 0x1AE4, 0x4508, 0xA6B4 };  // 深绿→中绿→亮绿
+        const uint16_t A_COLOR[3] = { 0x12C6, 0x3C67, 0x8630 };  // 深绿→中绿→亮绿（更暗）
         for (int li = 0; li < 3; li++) {
             // 逐段梯形（两个三角形）近似波浪带：沿 x 每隔 4px 采样上缘，下缘 = 上缘 + THICK
             for (int x = 0; x < _w; x += 4) {

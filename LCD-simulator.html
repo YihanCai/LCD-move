@@ -212,11 +212,11 @@ function drawMountain() {
   // 0.5) 极光（太空背景：悬在山顶上方天空，不贴山顶，3 层波浪光带，随相位流动）
   //      山顶平台局部 y=29（y 向下增大），极光用更小的 y（上方）→ 悬在山顶之上
   if (show.aurora) {
-    const au = (frameCount * 0.06);              // 极光流动相位（随时间推进）
+    const au = (frameCount * 0.03);              // 极光流动相位（慢速流动）
     const layers = [
-      { base: 22, amp: 2,   freq: 0.030, off: 0.0,  thick: 3, color: '#1B5E20' },
-      { base: 20, amp: 2,   freq: 0.040, off: 1.2,  thick: 3, color: '#43A047' },
-      { base: 18, amp: 1.6, freq: 0.050, off: 2.4,  thick: 2.5, color: '#A5D6A7' },
+      { base: 22, amp: 2,   freq: 0.030, off: 0.0,  thick: 3, color: '#145A32' },
+      { base: 20, amp: 2,   freq: 0.040, off: 1.2,  thick: 3, color: '#388E3C' },
+      { base: 18, amp: 1.6, freq: 0.050, off: 2.4,  thick: 2.5, color: '#81C784' },
     ];
     layers.forEach(L => {
       const yTop = x => L.base + L.amp * Math.sin(L.freq * x + au + L.off);
